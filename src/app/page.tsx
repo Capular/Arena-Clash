@@ -9,6 +9,13 @@ import SettingsView from "@/components/dashboard/SettingsView";
 import MobileNav from "@/components/dashboard/MobileNav";
 import LoginModal from "@/components/auth/LoginModal";
 import { ChevronDown, Bell } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
 import { collection, query, where, orderBy, onSnapshot, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -25,7 +32,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "tournaments");
   // ... existing state ...
   const [selectedGame, setSelectedGame] = useState("Free Fire");
-  const [isGameDropdownOpen, setIsGameDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -126,36 +132,23 @@ export default function Home() {
             </div>
 
             {/* Desktop: Dropdown */}
-            <div className="relative hidden lg:inline-block">
-              <button
-                onClick={() => setIsGameDropdownOpen(!isGameDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl hover:bg-white/5 transition-all text-white font-rajdhani font-bold min-w-[160px] justify-between shadow-sm"
-              >
-                {selectedGame}
-                <ChevronDown size={16} className={`text-muted-foreground transition-transform ${isGameDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {isGameDropdownOpen && (
-                <div className="absolute top-full mt-2 left-0 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="hidden lg:block w-[180px]">
+              <Select value={selectedGame} onValueChange={setSelectedGame}>
+                <SelectTrigger className="bg-card border-border hover:bg-white/5 transition-all text-white font-rajdhani font-bold shadow-sm h-10">
+                  <SelectValue placeholder="Select Game" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border text-white">
                   {GAMES.map((game) => (
-                    <button
+                    <SelectItem
                       key={game}
-                      onClick={() => {
-                        setSelectedGame(game);
-                        setIsGameDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors hover:bg-white/5 ${selectedGame === game ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-white'}`}
+                      value={game}
+                      className="font-rajdhani font-medium focus:bg-primary/10 focus:text-primary cursor-pointer"
                     >
                       {game}
-                    </button>
+                    </SelectItem>
                   ))}
-                </div>
-              )}
-
-              {/* Overlay to close dropdown */}
-              {isGameDropdownOpen && (
-                <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setIsGameDropdownOpen(false)} />
-              )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
