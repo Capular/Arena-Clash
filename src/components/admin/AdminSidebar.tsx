@@ -1,24 +1,20 @@
 "use client";
 
-import { useRef, useEffect, Dispatch, SetStateAction, useState } from "react";
-import { Users, Trophy, LogOut, ArrowLeft, Settings, Menu } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
+import { Users, Trophy, LogOut, ArrowLeft, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
-interface AdminSidebarProps {
-    activeTab: 'tournaments' | 'users';
-    setActiveTab: Dispatch<SetStateAction<'tournaments' | 'users'>>;
-}
-
-export default function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarProps) {
+export default function AdminSidebar() {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const navRef = useRef<HTMLDivElement>(null);
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth(); // isAdmin is available if needed, but layout handles protection
     const router = useRouter();
+    const pathname = usePathname();
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
 
@@ -63,9 +59,11 @@ export default function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarPr
     }, []);
 
     const menuItems = [
-        { id: "tournaments", label: "Tournaments", icon: Trophy },
-        { id: "users", label: "Users", icon: Users },
+        { id: "tournaments", label: "Tournaments", icon: Trophy, path: "/admin/tournaments" },
+        { id: "users", label: "Users", icon: Users, path: "/admin/users" },
     ];
+
+    const isActive = (path: string) => pathname.startsWith(path);
 
     const handleLogout = async () => {
         try {
@@ -95,10 +93,10 @@ export default function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarPr
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => setActiveTab(item.id as any)}
+                            onClick={() => router.push(item.path)}
                             className={cn(
                                 "w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium",
-                                activeTab === item.id
+                                isActive(item.path)
                                     ? "bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                             )}
