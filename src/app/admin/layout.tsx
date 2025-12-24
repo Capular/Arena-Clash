@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex min-h-screen bg-background premium-bg-gradient">
             <AdminSidebar />
             <div className="flex-1 lg:pl-52 transition-all duration-300">
-                <main className="p-4 lg:px-5 w-full max-w-full mx-auto pt-4">
+                <main className="p-4 w-full">
                     {children}
                 </main>
             </div>
