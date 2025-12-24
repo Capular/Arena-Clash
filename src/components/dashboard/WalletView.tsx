@@ -296,6 +296,12 @@ export default function WalletView() {
         );
     }
 
+    const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
+
+    const toggleExpand = (id: string) => {
+        setExpandedTxId(prev => prev === id ? null : id);
+    };
+
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -306,6 +312,8 @@ export default function WalletView() {
 
                     {/* Glass shine effect */}
                     <div className="glass-shine" />
+                    {/* Shine effect */}
+                    <div className="card-shine" />
 
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-2">
@@ -394,68 +402,119 @@ export default function WalletView() {
                         {transactions.map((tx) => (
                             <div
                                 key={tx.id}
-                                className="flex items-center justify-between p-3.5 rounded-xl bg-card/50 hover:bg-card/80 transition-all duration-300 border border-border/50 hover:border-primary/20 group relative overflow-hidden"
+                                onClick={() => toggleExpand(tx.id)}
+                                className={`relative overflow-hidden rounded-xl transition-all duration-300 border group cursor-pointer ${expandedTxId === tx.id
+                                    ? 'bg-card/80 border-primary/30 ring-1 ring-primary/20 shadow-lg'
+                                    : 'bg-card/50 hover:bg-card/80 border-border/50 hover:border-primary/20'
+                                    }`}
                             >
-                                {/* Subtle glass shine on hover */}
-                                <div className="glass-shine" />
+                                {/* Transaction Header */}
+                                <div className="flex items-center justify-between p-3.5">
+                                    {/* Subtle glass shine on hover */}
+                                    <div className="glass-shine" />
 
-                                <div className="flex items-center gap-3 relative z-10">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === 'pending'
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === 'pending'
                                             ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
                                             : tx.status === 'failed'
                                                 ? 'bg-red-500/10 text-red-500 border border-red-500/30'
                                                 : (tx.type === 'prize' || tx.type === 'deposit'
                                                     ? 'bg-green-500/10 text-green-500 border border-green-500/30'
                                                     : 'bg-primary/10 text-primary border border-primary/30')
-                                        }`}>
-                                        {tx.status === 'pending'
-                                            ? <Loader2 size={18} className="animate-spin" />
-                                            : (tx.type === 'prize' || tx.type === 'deposit'
-                                                ? <ArrowDownLeft size={18} />
-                                                : <ArrowUpRight size={18} />)
-                                        }
-                                    </div>
-
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                            <p className="font-semibold text-foreground capitalize text-sm">
-                                                {tx.description || tx.type}
-                                            </p>
-                                            {tx.status === 'pending' && (
-                                                <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
-                                                    Pending
-                                                </span>
-                                            )}
-                                            {tx.status === 'failed' && (
-                                                <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
-                                                    Failed
-                                                </span>
-                                            )}
+                                            }`}>
+                                            {tx.status === 'pending'
+                                                ? <Loader2 size={18} className="animate-spin" />
+                                                : (tx.type === 'prize' || tx.type === 'deposit'
+                                                    ? <ArrowDownLeft size={18} />
+                                                    : <ArrowUpRight size={18} />)
+                                            }
                                         </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
-                                        </p>
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center gap-2.5 relative z-10">
-                                    {tx.status === 'pending' && (
-                                        <button
-                                            onClick={() => manuallyCheck(tx)}
-                                            className="text-[11px] bg-primary/20 text-primary hover:bg-primary/30 px-2.5 py-1.5 rounded-lg transition-all font-bold"
-                                        >
-                                            Check
-                                        </button>
-                                    )}
-                                    <span className={`font-bold font-rajdhani text-lg ${tx.status === 'failed'
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <p className="font-semibold text-foreground capitalize text-sm">
+                                                    {tx.description || tx.type}
+                                                </p>
+                                                {tx.status === 'pending' && (
+                                                    <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                                                        Pending
+                                                    </span>
+                                                )}
+                                                {tx.status === 'failed' && (
+                                                    <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                                                        Failed
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2.5 relative z-10">
+                                        <span className={`font-bold font-rajdhani text-lg ${tx.status === 'failed'
                                             ? 'text-red-500 line-through'
                                             : (tx.type === 'prize' || tx.type === 'deposit'
                                                 ? "text-green-500"
                                                 : "text-foreground")
-                                        }`}>
-                                        {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
-                                    </span>
+                                            }`}>
+                                            {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
+
+                                {/* Expanded Details */}
+                                {expandedTxId === tx.id && (
+                                    <div className="px-4 pb-4 pt-0 animate-in slide-in-from-top-2 duration-300">
+                                        <div className="h-px w-full bg-border/50 mb-3" />
+                                        <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                                            <div className="col-span-2">
+                                                <p className="text-muted-foreground mb-1">Transaction ID</p>
+                                                <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5">
+                                                    {tx.id}
+                                                </p>
+                                            </div>
+
+                                            {tx.gatewayOrderId && (
+                                                <div className="col-span-2">
+                                                    <p className="text-muted-foreground mb-1">Gateway Ref</p>
+                                                    <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5">
+                                                        {tx.gatewayOrderId}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <p className="text-muted-foreground mb-0.5">Type</p>
+                                                <p className="font-medium text-foreground capitalize">{tx.type}</p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-muted-foreground mb-0.5">Status</p>
+                                                <p className={`font-medium capitalize ${tx.status === 'success' ? 'text-green-500' :
+                                                    tx.status === 'pending' ? 'text-yellow-500' : 'text-red-500'
+                                                    }`}>
+                                                    {tx.status || 'Success'}
+                                                </p>
+                                            </div>
+
+                                            {tx.status === 'pending' && (
+                                                <div className="col-span-2 mt-2">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            manuallyCheck(tx);
+                                                        }}
+                                                        className="w-full text-xs bg-primary/20 text-primary hover:bg-primary/30 py-2 rounded-lg transition-all font-bold"
+                                                    >
+                                                        Check Status with Gateway
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -466,3 +525,4 @@ export default function WalletView() {
         </div>
     );
 }
+```
