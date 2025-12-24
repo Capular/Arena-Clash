@@ -1,7 +1,7 @@
 "use client";
 
 import { CreditCard, ArrowUpRight, ArrowDownLeft, History, Loader2 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import { doc, onSnapshot, collection, query, where, addDoc, updateDoc, setDoc, increment, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -19,6 +19,137 @@ interface Transaction {
     gatewayOrderId?: string;
 }
 
+// Memoized Transaction Item Component to prevent unnecessary re-renders
+const TransactionItem = memo(({ tx, expanded, onToggle, onVerify }: {
+    tx: Transaction;
+    expanded: boolean;
+    onToggle: (id: string) => void;
+    onVerify: (tx: Transaction) => void;
+}) => {
+    return (
+        <div
+            onClick={() => onToggle(tx.id)}
+            className={`relative overflow-hidden rounded-xl transition-all duration-300 border group cursor-pointer ${expanded
+                    ? 'bg-card/80 border-primary/30 ring-1 ring-primary/20 shadow-lg'
+                    : 'bg-card/50 hover:bg-card/80 border-border/50 hover:border-primary/20'
+                }`}
+        >
+            {/* Transaction Header - Clean Layout */}
+            <div className="flex items-center justify-start p-3.5 gap-4">
+                {/* Simplified hover effect - lighter on performance */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
+
+                {/* Left Content (Icon + Text) */}
+                <div className="flex items-center gap-3 min-w-0 flex-1 text-left">
+                    <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border transition-colors duration-300 ${tx.status === 'pending'
+                            ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                            : tx.status === 'failed'
+                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                : (tx.type === 'prize' || tx.type === 'deposit'
+                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                    : 'bg-primary/10 text-primary border-primary/20')
+                        }`}>
+                        {tx.type === 'prize' || tx.type === 'deposit'
+                            ? <ArrowDownLeft size={18} />
+                            : <ArrowUpRight size={18} />
+                        }
+                    </div>
+
+                    <div className="min-w-0 flex-1 text-left">
+                        <div className="flex flex-wrap items-center justify-start gap-2 mb-0.5">
+                            <p className="font-semibold text-foreground capitalize text-sm truncate">
+                                {tx.description || tx.type}
+                            </p>
+
+                            {tx.status === 'pending' && (
+                                <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
+                                    Pending
+                                </span>
+                            )}
+                            {tx.status === 'failed' && (
+                                <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
+                                    Failed
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate text-left">
+                            {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Right Content (Amount) */}
+                <div className="flex-shrink-0 relative z-10 ml-auto">
+                    <span className={`font-bold font-rajdhani text-lg whitespace-nowrap ${tx.status === 'failed'
+                            ? 'text-red-500 line-through opacity-70'
+                            : (tx.type === 'prize' || tx.type === 'deposit'
+                                ? "text-green-500"
+                                : "text-foreground")
+                        }`}>
+                        {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
+                    </span>
+                </div>
+            </div>
+
+            {/* Expanded Details */}
+            {expanded && (
+                <div className="px-4 pb-4 pt-0 animate-in slide-in-from-top-2 duration-300 text-left">
+                    <div className="h-px w-full bg-border/50 mb-3" />
+                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                        <div className="col-span-2">
+                            <p className="text-muted-foreground mb-1 text-left">Transaction ID</p>
+                            <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5 text-left">
+                                {tx.id}
+                            </p>
+                        </div>
+
+                        {tx.gatewayOrderId && (
+                            <div className="col-span-2">
+                                <p className="text-muted-foreground mb-1 text-left">Gateway Ref</p>
+                                <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5 text-left">
+                                    {tx.gatewayOrderId}
+                                </p>
+                            </div>
+                        )}
+
+                        <div>
+                            <p className="text-muted-foreground mb-0.5 text-left">Type</p>
+                            <p className="font-medium text-foreground capitalize text-left">{tx.type}</p>
+                        </div>
+
+                        <div>
+                            <p className="text-muted-foreground mb-0.5 text-left">Status</p>
+                            <p className={`font-medium capitalize text-left ${tx.status === 'success' ? 'text-green-500' :
+                                    tx.status === 'pending' ? 'text-yellow-500' : 'text-red-500'
+                                }`}>
+                                {tx.status || 'Success'}
+                            </p>
+                        </div>
+
+                        {tx.status === 'pending' && (
+                            <div className="col-span-2 mt-2">
+                                <div className="text-yellow-500/80 italic text-[10px] text-center w-full mb-1">
+                                    Checking status automatically...
+                                </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onVerify(tx);
+                                    }}
+                                    className="w-full text-xs bg-primary/10 text-primary hover:bg-primary/20 py-2 rounded-lg transition-all font-bold opacity-50 hover:opacity-100"
+                                >
+                                    Force Check
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+});
+TransactionItem.displayName = "TransactionItem";
+
 export default function WalletView() {
     const { user } = useAuth();
     const [balance, setBalance] = useState(0);
@@ -28,6 +159,9 @@ export default function WalletView() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const processedRef = useRef(false);
+
+    // Track checked transactions to prevent loop
+    const checkedTxIds = useRef<Set<string>>(new Set());
 
     // Refs for GSAP animations
     const balanceCardRef = useRef(null);
@@ -176,18 +310,21 @@ export default function WalletView() {
         }
     };
 
-    // Auto-check effect
+    // Auto-check effect - Optimized to run once per ID
     useEffect(() => {
         if (!transactions.length) return;
 
         const pendingTxs = transactions.filter(tx => tx.status === 'pending');
-        if (pendingTxs.length > 0) {
-            console.log(`Auto-verifying ${pendingTxs.length} pending transactions...`);
-            pendingTxs.forEach(tx => verifyTransaction(tx, true));
-        }
 
-        // Optional: Set up an interval? For now one check on load/update is good
-    }, [transactions]); // Will re-run when transactions list updates (from snapshots)
+        pendingTxs.forEach(tx => {
+            // Only verify if we haven't checked this ID in this session yet
+            if (!checkedTxIds.current.has(tx.id)) {
+                checkedTxIds.current.add(tx.id);
+                console.log(`Auto-verifying transaction ${tx.id}...`);
+                verifyTransaction(tx, true);
+            }
+        });
+    }, [transactions]);
 
     // Handle Payment Verification (Redirect)
     useEffect(() => {
@@ -217,8 +354,6 @@ export default function WalletView() {
                             const txDoc = txSnap.docs[0];
                             const txData = txDoc.data();
 
-                            // Use our unified function logic implicitly here by just marking success directly 
-                            // as we are in the redirect flow which is critical
                             if (txData.status !== 'success') {
                                 let amount = 100;
                                 if (data.amount) amount = parseFloat(String(data.amount));
@@ -340,9 +475,8 @@ export default function WalletView() {
                     {/* Subtle gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-100" />
 
-                    {/* Glass shine effect */}
+                    {/* Glass shine effect - static to save perf */}
                     <div className="glass-shine" />
-                    {/* Shine effect */}
                     <div className="card-shine" />
 
                     <div className="relative z-10">
@@ -428,130 +562,13 @@ export default function WalletView() {
                     <>
                         <div className="space-y-2">
                             {displayedTransactions.map((tx) => (
-                                <div
+                                <TransactionItem
                                     key={tx.id}
-                                    onClick={() => toggleExpand(tx.id)}
-                                    className={`relative overflow-hidden rounded-xl transition-all duration-300 border group cursor-pointer ${expandedTxId === tx.id
-                                        ? 'bg-card/80 border-primary/30 ring-1 ring-primary/20 shadow-lg'
-                                        : 'bg-card/50 hover:bg-card/80 border-border/50 hover:border-primary/20'
-                                        }`}
-                                >
-                                    {/* Transaction Header - Clean Layout */}
-                                    <div className="flex items-center justify-start p-3.5 gap-4">
-                                        {/* Subtle glass shine on hover */}
-                                        <div className="glass-shine" />
-
-                                        {/* Left Content (Icon + Text) */}
-                                        <div className="flex items-center gap-3 min-w-0 flex-1 text-left">
-                                            {/* Simplified Icon Container - No Spinners */}
-                                            <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border transition-colors duration-300 ${tx.status === 'pending'
-                                                ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-                                                : tx.status === 'failed'
-                                                    ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                                    : (tx.type === 'prize' || tx.type === 'deposit'
-                                                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                                        : 'bg-primary/10 text-primary border-primary/20')
-                                                }`}>
-                                                {/* Fixed Icons based on direction mainly */}
-                                                {tx.type === 'prize' || tx.type === 'deposit'
-                                                    ? <ArrowDownLeft size={18} />
-                                                    : <ArrowUpRight size={18} />
-                                                }
-                                            </div>
-
-                                            <div className="min-w-0 flex-1 text-left">
-                                                <div className="flex flex-wrap items-center justify-start gap-2 mb-0.5">
-                                                    <p className="font-semibold text-foreground capitalize text-sm truncate">
-                                                        {tx.description || tx.type}
-                                                    </p>
-
-                                                    {/* Status Badges */}
-                                                    {tx.status === 'pending' && (
-                                                        <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
-                                                            Pending
-                                                        </span>
-                                                    )}
-                                                    {tx.status === 'failed' && (
-                                                        <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
-                                                            Failed
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[11px] text-muted-foreground truncate text-left">
-                                                    {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Right Content (Amount) */}
-                                        <div className="flex-shrink-0 relative z-10 ml-auto">
-                                            <span className={`font-bold font-rajdhani text-lg whitespace-nowrap ${tx.status === 'failed'
-                                                ? 'text-red-500 line-through opacity-70'
-                                                : (tx.type === 'prize' || tx.type === 'deposit'
-                                                    ? "text-green-500"
-                                                    : "text-foreground")
-                                                }`}>
-                                                {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Details */}
-                                    {expandedTxId === tx.id && (
-                                        <div className="px-4 pb-4 pt-0 animate-in slide-in-from-top-2 duration-300 text-left">
-                                            <div className="h-px w-full bg-border/50 mb-3" />
-                                            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
-                                                {/* ... existing details ... */}
-                                                <div className="col-span-2">
-                                                    <p className="text-muted-foreground mb-1 text-left">Transaction ID</p>
-                                                    <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5 text-left">
-                                                        {tx.id}
-                                                    </p>
-                                                </div>
-
-                                                {tx.gatewayOrderId && (
-                                                    <div className="col-span-2">
-                                                        <p className="text-muted-foreground mb-1 text-left">Gateway Ref</p>
-                                                        <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5 text-left">
-                                                            {tx.gatewayOrderId}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                <div>
-                                                    <p className="text-muted-foreground mb-0.5 text-left">Type</p>
-                                                    <p className="font-medium text-foreground capitalize text-left">{tx.type}</p>
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-muted-foreground mb-0.5 text-left">Status</p>
-                                                    <p className={`font-medium capitalize text-left ${tx.status === 'success' ? 'text-green-500' :
-                                                        tx.status === 'pending' ? 'text-yellow-500' : 'text-red-500'
-                                                        }`}>
-                                                        {tx.status || 'Success'}
-                                                    </p>
-                                                </div>
-
-                                                {tx.status === 'pending' && (
-                                                    <div className="col-span-2 mt-2">
-                                                        <div className="text-yellow-500/80 italic text-[10px] text-center w-full mb-1">
-                                                            Checking status automatically...
-                                                        </div>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                verifyTransaction(tx);
-                                                            }}
-                                                            className="w-full text-xs bg-primary/10 text-primary hover:bg-primary/20 py-2 rounded-lg transition-all font-bold opacity-50 hover:opacity-100"
-                                                        >
-                                                            Force Check
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                    tx={tx}
+                                    expanded={expandedTxId === tx.id}
+                                    onToggle={toggleExpand}
+                                    onVerify={verifyTransaction}
+                                />
                             ))}
                         </div>
 
@@ -567,7 +584,7 @@ export default function WalletView() {
                                         disabled={currentPage === 1}
                                         className="p-2 rounded-lg bg-card border border-primary/20 hover:bg-primary/10 disabled:opacity-30 disabled:hover:bg-card transition-all"
                                     >
-                                        <ArrowDownLeft className="w-4 h-4 rotate-90" /> {/* Improvising left arrow with rotation or use simple text/other icon */}
+                                        <ArrowDownLeft className="w-4 h-4 rotate-90" />
                                     </button>
                                     <span className="text-xs font-bold font-rajdhani bg-primary/10 px-3 py-1.5 rounded-md text-primary">
                                         {currentPage} / {totalPages}
@@ -577,7 +594,7 @@ export default function WalletView() {
                                         disabled={currentPage === totalPages}
                                         className="p-2 rounded-lg bg-card border border-primary/20 hover:bg-primary/10 disabled:opacity-30 disabled:hover:bg-card transition-all"
                                     >
-                                        <ArrowUpRight className="w-4 h-4 rotate-90" /> {/* Improvising right arrow */}
+                                        <ArrowUpRight className="w-4 h-4 rotate-90" />
                                     </button>
                                 </div>
                             </div>
