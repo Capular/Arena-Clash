@@ -47,14 +47,13 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         <>
             <aside
                 ref={sidebarRef}
-                className="w-20 lg:w-64 h-screen border-r border-border bg-card/50 backdrop-blur-xl flex flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
+                className="hidden lg:flex w-64 h-screen border-r border-border bg-card/50 backdrop-blur-xl flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
             >
                 <div>
                     <div className="h-20 flex items-center justify-center border-b border-border/50">
-                        <h1 className="hidden lg:block font-rajdhani font-bold text-2xl text-primary tracking-wider uppercase">
+                        <h1 className="font-rajdhani font-bold text-2xl text-primary tracking-wider uppercase">
                             Arena Clash
                         </h1>
-                        <Gamepad2 className="lg:hidden h-8 w-8 text-primary" />
                     </div>
 
                     <nav className="p-4 space-y-2">

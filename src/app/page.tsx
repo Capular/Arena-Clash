@@ -5,6 +5,8 @@ import Sidebar from "@/components/dashboard/Sidebar";
 import TournamentsView from "@/components/dashboard/TournamentsView";
 import WalletView from "@/components/dashboard/WalletView";
 import MyRegistrationsView from "@/components/dashboard/MyRegistrationsView";
+import SettingsView from "@/components/dashboard/SettingsView";
+import MobileNav from "@/components/dashboard/MobileNav";
 import { ChevronDown, Bell } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { collection, query, where, orderBy, onSnapshot, limit } from "firebase/firestore";
@@ -19,6 +21,7 @@ export default function Home() {
 
   // Initialize from URL param or default
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "tournaments");
+  // ... existing state ...
   const [selectedGame, setSelectedGame] = useState("Free Fire");
   const [isGameDropdownOpen, setIsGameDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -26,46 +29,45 @@ export default function Home() {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && (tab === "tournaments" || tab === "wallet" || tab === "my-registrations")) {
+    if (tab && (tab === "tournaments" || tab === "wallet" || tab === "my-registrations" || tab === "settings")) {
       setActiveTab(tab);
     }
   }, [searchParams]);
 
+  // ... notification effect ...
   useEffect(() => {
     if (!user) return;
-
-    // Fetch Notifications
     const q = query(
       collection(db, "notifications"),
       where("userId", "==", user.uid),
       orderBy("createdAt", "desc"),
       limit(10)
     );
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setNotifications(notifs);
-      // Simple unread count logic (assuming 'read' field exists, if not just show total or new)
       setUnreadCount(notifs.filter((n: any) => !n.read).length);
     });
-
     return () => unsubscribe();
   }, [user]);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background pb-20 lg:pb-0">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="lg:pl-64 transition-all duration-300">
         {/* Header Area */}
-        <header className="h-20 border-b border-border/50 flex items-center justify-between px-8 bg-background/80 backdrop-blur-xl sticky top-0 z-40">
+        <header className="h-16 lg:h-20 border-b border-border/50 flex items-center justify-between px-4 lg:px-8 bg-background/80 backdrop-blur-xl sticky top-0 z-40">
           {/* Left Side: Title */}
-          <h1 className="text-2xl font-bold text-white capitalize font-rajdhani tracking-wide">
-            {activeTab === 'tournaments' ? 'Live Tournaments' : activeTab === 'wallet' ? 'My Wallet' : 'My Registrations'}
+          <h1 className="text-xl lg:text-2xl font-bold text-white capitalize font-rajdhani tracking-wide">
+            {activeTab === 'tournaments' ? 'Live Tournaments' : activeTab === 'wallet' ? 'My Wallet' : activeTab === 'settings' ? 'Settings' : 'My Registrations'}
           </h1>
 
-          {/* Right Side: Notification */}
+          {/* Right Side: Notification & Mobile Profile */}
           <div className="flex items-center gap-4">
+            {/* Mobile Logo/icon if needed, or keeping it clean */}
+
             <div className="relative group">
               {unreadCount > 0 && (
                 <div className="w-5 h-5 rounded-full bg-red-500 absolute -top-1 -right-1 animate-pulse z-10 flex items-center justify-center text-[10px] font-bold text-white border-2 border-background">
@@ -105,10 +107,23 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Controls Bar */}
+        {/* Controls Bar (Only Tournaments) */}
         {activeTab === "tournaments" && (
-          <div className="px-8 mt-6 mb-2">
-            <div className="relative inline-block">
+          <div className="px-4 lg:px-8 mt-6 mb-2 overflow-x-auto no-scrollbar">
+            {/* Mobile: Horizontal Scroll Chips */}
+            <div className="flex gap-2 lg:hidden">
+              {GAMES.map(game => (
+                <button
+                  key={game}
+                  onClick={() => setSelectedGame(game)}
+                  className={`whitespace-nowrap px-4 py-2 rounded-full border text-sm font-bold font-rajdhani transition-colors ${selectedGame === game ? 'bg-primary/20 border-primary text-primary' : 'bg-card border-border text-muted-foreground'}`}>
+                  {game}
+                </button>
+              ))}
+            </div>
+
+            {/* Desktop: Dropdown */}
+            <div className="relative hidden lg:inline-block">
               <button
                 onClick={() => setIsGameDropdownOpen(!isGameDropdownOpen)}
                 className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl hover:bg-white/5 transition-all text-white font-rajdhani font-bold min-w-[160px] justify-between shadow-sm"
@@ -146,6 +161,7 @@ export default function Home() {
           {activeTab === "tournaments" && <TournamentsView selectedGame={selectedGame === "All Games" ? undefined : selectedGame} />}
           {activeTab === "my-registrations" && <MyRegistrationsView />}
           {activeTab === "wallet" && <WalletView />}
+          {activeTab === "settings" && <SettingsView />}
         </section>
       </div>
     </main>
