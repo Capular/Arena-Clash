@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, Timestamp, query, orderBy } from "firebase/firestore";
+import { useState, useEffect, useRef } from "react";
+import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Plus, Trash2, Edit2, Calendar, Trophy, Gamepad2, X } from "lucide-react";
+import { Plus, Trash2, Gamepad2, X, Loader2 } from "lucide-react";
+import gsap from "gsap";
 
 interface Tournament {
     id: string;
@@ -26,12 +27,12 @@ export default function AdminTournaments() {
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const listRef = useRef<HTMLDivElement>(null);
 
-    // Form State
     const [formData, setFormData] = useState({
-        game: 'BGMI',
+        game: 'Free Fire',
         title: '',
-        map: 'Erangel',
+        map: 'Bermuda',
         entryFee: 0,
         prizePool: 0,
         perKill: 0,
@@ -53,6 +54,28 @@ export default function AdminTournaments() {
         fetchTournaments();
     }, []);
 
+    // Animate list items
+    useEffect(() => {
+        if (listRef.current && tournaments.length > 0) {
+            gsap.fromTo(
+                listRef.current.children,
+                { y: 10, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.3, stagger: 0.05, ease: "power2.out" }
+            );
+        }
+    }, [tournaments]);
+
+    // Animate modal
+    useEffect(() => {
+        if (isFormOpen) {
+            gsap.fromTo(
+                ".admin-modal",
+                { scale: 0.95, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.2, ease: "power2.out" }
+            );
+        }
+    }, [isFormOpen]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -65,7 +88,6 @@ export default function AdminTournaments() {
             });
             setIsFormOpen(false);
             fetchTournaments();
-            alert("Tournament Created!");
         } catch (error) {
             console.error("Error adding tournament: ", error);
         }
@@ -73,55 +95,50 @@ export default function AdminTournaments() {
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm("Are you sure you want to delete this tournament?")) {
+        if (confirm("Delete this tournament?")) {
             await deleteDoc(doc(db, "tournaments", id));
             fetchTournaments();
         }
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold font-rajdhani">All Tournaments</h2>
+                <h2 className="text-lg font-semibold text-foreground">All Tournaments</h2>
                 <button
                     onClick={() => setIsFormOpen(true)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all"
+                    className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 hover:bg-primary/90 transition-colors"
                 >
-                    <Plus size={18} /> Add Tournament
+                    <Plus size={16} /> Add
                 </button>
             </div>
 
-            {/* List */}
-            <div className="grid grid-cols-1 gap-4">
+            {/* Tournament List */}
+            <div ref={listRef} className="space-y-2">
                 {tournaments.map((t) => (
-                    <div key={t.id} className="bg-black/40 border border-white/10 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center">
-                                <Gamepad2 className="text-primary" />
+                    <div key={t.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-border transition-colors">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <Gamepad2 className="text-primary w-5 h-5" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg">{t.title || t.game}</h3>
-                                <p className="text-sm text-muted-foreground">{t.date} at {t.time} • Map: {t.map}</p>
+                                <h3 className="font-semibold text-foreground text-sm">{t.title || t.game}</h3>
+                                <p className="text-xs text-muted-foreground">{t.date} • {t.time} • {t.map}</p>
                             </div>
                         </div>
-                        <div className="flex gap-6 text-sm">
-                            <div className="text-center">
-                                <p className="text-muted-foreground">Entry</p>
-                                <p className="font-bold text-green-400">₹{t.entryFee}</p>
+                        <div className="flex items-center gap-6">
+                            <div className="text-right hidden md:block">
+                                <p className="text-xs text-muted-foreground">Entry / Prize</p>
+                                <p className="text-sm font-medium">₹{t.entryFee} / ₹{t.prizePool}</p>
                             </div>
-                            <div className="text-center">
-                                <p className="text-muted-foreground">Prize</p>
-                                <p className="font-bold text-yellow-400">₹{t.prizePool}</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-muted-foreground">Status</p>
-                                <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-xs uppercase font-bold">{t.status}</span>
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                            {/* Future: Edit functionality */}
-                            <button onClick={() => handleDelete(t.id)} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20">
-                                <Trash2 size={18} />
+                            <span className={`text-xs px-2 py-1 rounded font-medium ${t.status === 'live' ? 'bg-red-500/10 text-red-500' :
+                                    t.status === 'completed' ? 'bg-muted text-muted-foreground' :
+                                        'bg-primary/10 text-primary'
+                                }`}>
+                                {t.status}
+                            </span>
+                            <button onClick={() => handleDelete(t.id)} className="p-2 text-muted-foreground hover:text-red-500 transition-colors">
+                                <Trash2 size={16} />
                             </button>
                         </div>
                     </div>
@@ -130,90 +147,98 @@ export default function AdminTournaments() {
 
             {/* Create Modal */}
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
-                    <div className="bg-neutral-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl relative">
-                        <button onClick={() => setIsFormOpen(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-white"><X /></button>
-                        <h2 className="text-xl font-bold mb-6">Create New Tournament</h2>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                    <div className="admin-modal bg-card border border-border rounded-xl p-6 w-full max-w-lg relative">
+                        <button onClick={() => setIsFormOpen(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+                            <X size={18} />
+                        </button>
+                        <h2 className="text-lg font-semibold mb-4">Create Tournament</h2>
 
-                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Game</label>
-                                <select
-                                    className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
-                                    value={formData.game}
-                                    onChange={e => setFormData({ ...formData, game: e.target.value })}
-                                >
-                                    <option value="BGMI">BGMI</option>
-                                    <option value="Free Fire">Free Fire</option>
-                                    <option value="COD Mobile">COD Mobile</option>
-                                </select>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Game</label>
+                                    <select
+                                        className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        value={formData.game}
+                                        onChange={e => setFormData({ ...formData, game: e.target.value })}
+                                    >
+                                        <option value="Free Fire">Free Fire</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Title</label>
+                                    <input type="text" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        placeholder="Tournament name"
+                                        value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Title (Optional)</label>
-                                <input type="text" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg" placeholder="e.g. Weekly Scrims #44"
-                                    value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                />
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Entry (₹)</label>
+                                    <input type="number" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        value={formData.entryFee} onChange={e => setFormData({ ...formData, entryFee: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Prize (₹)</label>
+                                    <input type="number" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        value={formData.prizePool} onChange={e => setFormData({ ...formData, prizePool: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Per Kill (₹)</label>
+                                    <input type="number" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        value={formData.perKill} onChange={e => setFormData({ ...formData, perKill: Number(e.target.value) })}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Map</label>
-                                <input type="text" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
-                                    value={formData.map} onChange={e => setFormData({ ...formData, map: e.target.value })}
-                                />
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Map</label>
+                                    <input type="text" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        value={formData.map} onChange={e => setFormData({ ...formData, map: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Date</label>
+                                    <input type="date" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-muted-foreground block mb-1">Time</label>
+                                    <input type="time" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
+                                        value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
+                                    />
+                                </div>
                             </div>
+
                             <div>
                                 <label className="text-xs text-muted-foreground block mb-1">Max Players</label>
-                                <input type="number" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
+                                <input type="number" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
                                     value={formData.maxPlayers} onChange={e => setFormData({ ...formData, maxPlayers: Number(e.target.value) })}
                                 />
                             </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Entry Fee (₹)</label>
-                                <input type="number" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
-                                    value={formData.entryFee} onChange={e => setFormData({ ...formData, entryFee: Number(e.target.value) })}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Prize Pool (₹)</label>
-                                <input type="number" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
-                                    value={formData.prizePool} onChange={e => setFormData({ ...formData, prizePool: Number(e.target.value) })}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Per Kill (₹)</label>
-                                <input type="number" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
-                                    value={formData.perKill} onChange={e => setFormData({ ...formData, perKill: Number(e.target.value) })}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Date</label>
-                                <input type="date" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg text-white"
-                                    value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground block mb-1">Time</label>
-                                <input type="time" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg text-white"
-                                    value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                />
-                            </div>
 
-                            <div className="md:col-span-2 border-t border-white/10 pt-4 mt-2">
-                                <h3 className="text-sm font-bold mb-2 text-yellow-500">Room Details (Hidden from users until filled)</h3>
+                            <div className="border-t border-border pt-4">
+                                <p className="text-xs text-muted-foreground mb-2">Room Details (optional)</p>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" placeholder="Room ID" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
+                                    <input type="text" placeholder="Room ID" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
                                         value={formData.roomId} onChange={e => setFormData({ ...formData, roomId: e.target.value })}
                                     />
-                                    <input type="text" placeholder="Password" className="w-full bg-black/50 border border-white/10 p-2 rounded-lg"
+                                    <input type="text" placeholder="Password" className="w-full bg-muted/50 border border-border p-2 rounded-lg text-sm"
                                         value={formData.roomPassword} onChange={e => setFormData({ ...formData, roomPassword: e.target.value })}
                                     />
                                 </div>
                             </div>
 
-                            <div className="md:col-span-2 pt-4">
-                                <button disabled={isLoading} type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-all">
-                                    {isLoading ? "Creating..." : "Create Tournament"}
-                                </button>
-                            </div>
+                            <button disabled={isLoading} type="submit" className="w-full bg-primary text-primary-foreground font-semibold py-2.5 rounded-lg hover:bg-primary/90 transition-colors text-sm">
+                                {isLoading ? <Loader2 className="animate-spin mx-auto w-4 h-4" /> : "Create Tournament"}
+                            </button>
                         </form>
                     </div>
                 </div>

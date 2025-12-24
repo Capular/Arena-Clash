@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useRouter } from "next/navigation";
-import { Loader2, Shield, Users, Trophy } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminTournaments from "@/components/admin/AdminTournaments";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import gsap from "gsap";
 
 export default function AdminPage() {
     const { user, isAdmin, loading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'tournaments' | 'users'>('tournaments');
+    const mainRef = useRef<HTMLDivElement>(null);
+    const headerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!loading) {
@@ -21,40 +24,54 @@ export default function AdminPage() {
         }
     }, [user, isAdmin, loading, router]);
 
+    // Page entrance animation
+    useEffect(() => {
+        if (mainRef.current && headerRef.current) {
+            gsap.fromTo(
+                headerRef.current,
+                { y: -20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
+            );
+            gsap.fromTo(
+                mainRef.current,
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, ease: "power2.out", delay: 0.1 }
+            );
+        }
+    }, [activeTab]);
+
     if (loading || !user || !isAdmin) {
         return (
-            <div className="flex h-screen items-center justify-center bg-black text-white">
+            <div className="flex h-screen items-center justify-center bg-background">
                 <Loader2 className="animate-spin text-primary mr-2" />
-                <span className="font-rajdhani font-bold">Verifying Admin Access...</span>
+                <span className="font-rajdhani font-medium text-foreground">Verifying access...</span>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans flex">
-
+        <div className="min-h-screen bg-background text-foreground flex">
             <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            <main className="flex-1 ml-20 lg:ml-64 p-6 md:p-12 overflow-y-auto w-full">
-                <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
-
+            <main className="flex-1 ml-20 lg:ml-64 p-6 lg:p-8">
+                <div className="max-w-6xl mx-auto space-y-6">
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <h1 className="text-4xl font-black font-rajdhani uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">
-                                Admin Console
-                            </h1>
-                            <p className="text-muted-foreground">Manage tournaments, users, and platform settings.</p>
-                        </div>
+                    <div ref={headerRef}>
+                        <h1 className="text-2xl font-bold font-rajdhani text-foreground">
+                            {activeTab === 'tournaments' ? 'Tournaments' : 'Users'}
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            {activeTab === 'tournaments'
+                                ? 'Create and manage tournaments'
+                                : 'Manage users and balances'
+                            }
+                        </p>
                     </div>
 
-                    {/* Content Area */}
-                    <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-3xl p-6 md:p-8 min-h-[600px] relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
-
+                    {/* Content */}
+                    <div ref={mainRef} className="bg-card border border-border rounded-xl p-6">
                         {activeTab === 'tournaments' ? <AdminTournaments /> : <AdminUsers />}
                     </div>
-
                 </div>
             </main>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useEffect, Dispatch, SetStateAction } from "react";
-import { Users, Trophy, LogOut, LayoutDashboard, ArrowLeft } from "lucide-react";
+import { useRef, useEffect, Dispatch, SetStateAction, useState } from "react";
+import { Users, Trophy, LogOut, ArrowLeft, Settings, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -15,16 +15,51 @@ interface AdminSidebarProps {
 }
 
 export default function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarProps) {
-    const sidebarRef = useRef(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
+    const navRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
     const router = useRouter();
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
 
+    // Sidebar entrance animation
     useEffect(() => {
         gsap.fromTo(
             sidebarRef.current,
-            { x: -50, opacity: 0 },
-            { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }
+            { x: -20, opacity: 0 },
+            { x: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
         );
+
+        // Stagger nav items
+        if (navRef.current) {
+            gsap.fromTo(
+                navRef.current.children,
+                { x: -10, opacity: 0 },
+                { x: 0, opacity: 1, duration: 0.3, stagger: 0.1, ease: "power2.out", delay: 0.2 }
+            );
+        }
+    }, []);
+
+    // Profile menu animation
+    useEffect(() => {
+        if (isProfileMenuOpen) {
+            gsap.fromTo(
+                ".admin-profile-menu",
+                { opacity: 0, y: 8, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.2, ease: "power2.out" }
+            );
+        }
+    }, [isProfileMenuOpen]);
+
+    // Click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+                setIsProfileMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const menuItems = [
@@ -44,59 +79,81 @@ export default function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarPr
     return (
         <aside
             ref={sidebarRef}
-            className="w-20 lg:w-64 h-screen border-r border-border bg-card/50 backdrop-blur-xl flex flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
+            className="w-20 lg:w-64 h-screen bg-background border-r border-border/40 flex flex-col justify-between fixed left-0 top-0 z-50"
         >
-            <div>
-                <div className="h-20 flex items-center justify-center border-b border-border/50">
-                    <h1 className="hidden lg:block font-rajdhani font-bold text-2xl text-purple-500 tracking-wider uppercase">
-                        Admin
+            <div className="flex flex-col flex-1 min-h-0">
+                {/* Header */}
+                <div className="h-14 flex items-center justify-center lg:justify-start lg:px-4">
+                    <h1 className="hidden lg:block font-rajdhani font-bold text-lg text-foreground">
+                        Admin Panel
                     </h1>
-                    <LayoutDashboard className="lg:hidden h-8 w-8 text-purple-500" />
+                    <Trophy className="lg:hidden h-5 w-5 text-primary" />
                 </div>
 
-                <nav className="p-4 space-y-2">
+                {/* Navigation */}
+                <nav ref={navRef} className="flex-1 px-3 pt-2 space-y-1">
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id as any)}
                             className={cn(
-                                "w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
+                                "w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium",
                                 activeTab === item.id
-                                    ? "bg-purple-500/10 text-purple-500"
-                                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                             )}
                         >
-                            <item.icon className="h-5 w-5 z-10" />
-                            <span className="hidden lg:block font-medium z-10 font-rajdhani text-lg">
-                                {item.label}
-                            </span>
-                            {activeTab === item.id && (
-                                <div className="absolute inset-0 bg-purple-500/10 border-r-2 border-purple-500" />
-                            )}
+                            <item.icon className="h-[18px] w-[18px]" />
+                            <span className="hidden lg:block font-rajdhani">{item.label}</span>
                         </button>
                     ))}
                 </nav>
             </div>
 
-            <div className="p-4 border-t border-border/50 space-y-2">
+            {/* Bottom Section */}
+            <div className="px-3 pb-4 space-y-2" ref={profileRef}>
+                {/* Back to App */}
                 <button
                     onClick={() => router.push('/')}
-                    className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 text-muted-foreground hover:text-white transition-colors"
+                    className="w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors text-sm font-medium"
                 >
-                    <ArrowLeft className="h-5 w-5" />
-                    <span className="hidden lg:block font-medium font-rajdhani">Main App</span>
+                    <ArrowLeft className="h-[18px] w-[18px]" />
+                    <span className="hidden lg:block font-rajdhani">Back to App</span>
                 </button>
 
-                <div className="flex items-center gap-3 px-3 py-2 bg-black/20 rounded-lg relative group cursor-pointer">
-                    <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-500 overflow-hidden">
-                        {user?.photoURL ? <img src={user.photoURL} alt="User" className="h-full w-full object-cover" /> : <div className="font-bold">A</div>}
+                {/* Profile Menu */}
+                {isProfileMenuOpen && (
+                    <div className="admin-profile-menu absolute bottom-20 left-3 right-3 lg:right-auto lg:w-56 bg-popover border border-border/50 rounded-xl shadow-xl py-1.5 z-50">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2.5 font-medium transition-colors"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            <span className="hidden lg:inline">Log Out</span>
+                        </button>
                     </div>
-                    <div className="hidden lg:block flex-1 overflow-hidden">
-                        <p className="text-sm font-bold text-white leading-none truncate">Admin</p>
+                )}
+
+                {/* Profile Badge */}
+                <div
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    className={cn(
+                        "flex items-center justify-center lg:justify-start gap-2.5 px-3 py-2.5 bg-muted/30 rounded-lg hover:bg-muted/50 transition-all cursor-pointer",
+                        isProfileMenuOpen && "bg-muted/60"
+                    )}
+                >
+                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden flex-shrink-0">
+                        {user?.photoURL ? (
+                            <img src={user.photoURL} alt="User" className="h-full w-full object-cover" />
+                        ) : (
+                            <span className="font-bold text-sm">A</span>
+                        )}
                     </div>
-                    <button onClick={handleLogout} className="absolute right-2 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <LogOut size={16} />
-                    </button>
+                    <div className="hidden lg:block flex-1 overflow-hidden min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">Admin</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
+                    </div>
+                    <Menu size={14} className="hidden lg:block text-muted-foreground opacity-50" />
                 </div>
             </div>
         </aside>
