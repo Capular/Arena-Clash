@@ -128,6 +128,21 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
                                     <Settings className="h-4 w-4 text-muted-foreground" />
                                     Settings
                                 </button>
+                                {/* Admin Link */}
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => {
+                                            router.push("/admin");
+                                            setIsProfileMenuOpen(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 flex items-center gap-2.5 font-medium transition-colors"
+                                    >
+                                        <div className="h-4 w-4 rounded-[4px] border border-muted-foreground/40 flex items-center justify-center bg-primary/5">
+                                            <span className="text-[9px] font-bold text-primary">A</span>
+                                        </div>
+                                        Admin Panel
+                                    </button>
+                                )}
                                 <div className="h-px bg-border/40 my-1 mx-2" />
                                 <button
                                     onClick={handleLogout}
