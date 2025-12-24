@@ -1,8 +1,7 @@
-```typescript
-import { Rajdhani } from "next/font/google"; // Import only Rajdhani
+import { Rajdhani } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
-import LayoutShell from "@/components/dashboard/LayoutShell"; // We need a client wrapper for state
+import LayoutShell from "@/components/dashboard/LayoutShell";
 
 const rajdhani = Rajdhani({
   subsets: ["latin"],
@@ -22,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${ rajdhani.variable } font - sans bg - background text - foreground`}>
+      <body className={`${rajdhani.variable} font-sans bg-background text-foreground`}>
         <AuthProvider>
           <LayoutShell>
             {children}
@@ -32,4 +31,3 @@ export default function RootLayout({
     </html>
   );
 }
-```
