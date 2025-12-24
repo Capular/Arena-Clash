@@ -77,7 +77,7 @@ export default function WalletView() {
                 return timeB - timeA;
             });
 
-            setTransactions(txs.slice(0, 5));
+            setTransactions(txs.slice(0, 50));
             setStats({ winnings: totalWinnings, spent: totalSpent });
         });
 
@@ -308,6 +308,24 @@ export default function WalletView() {
         );
     }
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Derived state for pagination
+    const totalPages = Math.ceil(transactions.length / itemsPerPage);
+    const displayedTransactions = transactions.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) setCurrentPage(prev => prev - 1);
+    };
+
     const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
 
     const toggleExpand = (id: string) => {
@@ -396,9 +414,6 @@ export default function WalletView() {
                         </div>
                         Recent Transactions
                     </h3>
-                    <button className="text-xs text-primary hover:text-primary/80 font-semibold transition-colors hover:underline underline-offset-4">
-                        View All →
-                    </button>
                 </div>
 
                 {transactions.length === 0 ? (
@@ -410,134 +425,164 @@ export default function WalletView() {
                         <p className="text-muted-foreground/60 text-sm mt-1">Your transaction history will appear here</p>
                     </div>
                 ) : (
-                    <div className="space-y-2">
-                        {transactions.map((tx) => (
-                            <div
-                                key={tx.id}
-                                onClick={() => toggleExpand(tx.id)}
-                                className={`relative overflow-hidden rounded-xl transition-all duration-300 border group cursor-pointer ${expandedTxId === tx.id
+                    <>
+                        <div className="space-y-2">
+                            {displayedTransactions.map((tx) => (
+                                <div
+                                    key={tx.id}
+                                    onClick={() => toggleExpand(tx.id)}
+                                    className={`relative overflow-hidden rounded-xl transition-all duration-300 border group cursor-pointer ${expandedTxId === tx.id
                                         ? 'bg-card/80 border-primary/30 ring-1 ring-primary/20 shadow-lg'
                                         : 'bg-card/50 hover:bg-card/80 border-border/50 hover:border-primary/20'
-                                    }`}
-                            >
-                                {/* Transaction Header - Clean Layout */}
-                                <div className="flex items-center justify-between p-3.5 gap-4">
-                                    {/* Subtle glass shine on hover */}
-                                    <div className="glass-shine" />
+                                        }`}
+                                >
+                                    {/* Transaction Header - Clean Layout */}
+                                    <div className="flex items-center justify-start p-3.5 gap-4">
+                                        {/* Subtle glass shine on hover */}
+                                        <div className="glass-shine" />
 
-                                    {/* Left Content (Icon + Text) */}
-                                    <div className="flex items-center gap-3 min-w-0 relative z-10">
-                                        {/* Simplified Icon Container - No Spinners */}
-                                        <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border transition-colors duration-300 ${tx.status === 'pending'
+                                        {/* Left Content (Icon + Text) */}
+                                        <div className="flex items-center gap-3 min-w-0 flex-1 text-left">
+                                            {/* Simplified Icon Container - No Spinners */}
+                                            <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border transition-colors duration-300 ${tx.status === 'pending'
                                                 ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
                                                 : tx.status === 'failed'
                                                     ? 'bg-red-500/10 text-red-500 border-red-500/20'
                                                     : (tx.type === 'prize' || tx.type === 'deposit'
                                                         ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                                         : 'bg-primary/10 text-primary border-primary/20')
-                                            }`}>
-                                            {/* Fixed Icons based on direction mainly */}
-                                            {tx.type === 'prize' || tx.type === 'deposit'
-                                                ? <ArrowDownLeft size={18} />
-                                                : <ArrowUpRight size={18} />
-                                            }
-                                        </div>
-
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                                                <p className="font-semibold text-foreground capitalize text-sm truncate">
-                                                    {tx.description || tx.type}
-                                                </p>
-
-                                                {/* Status Badges */}
-                                                {tx.status === 'pending' && (
-                                                    <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
-                                                        Pending
-                                                    </span>
-                                                )}
-                                                {tx.status === 'failed' && (
-                                                    <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
-                                                        Failed
-                                                    </span>
-                                                )}
+                                                }`}>
+                                                {/* Fixed Icons based on direction mainly */}
+                                                {tx.type === 'prize' || tx.type === 'deposit'
+                                                    ? <ArrowDownLeft size={18} />
+                                                    : <ArrowUpRight size={18} />
+                                                }
                                             </div>
-                                            <p className="text-[11px] text-muted-foreground truncate">
-                                                {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
-                                            </p>
-                                        </div>
-                                    </div>
 
-                                    {/* Right Content (Amount) */}
-                                    <div className="flex-shrink-0 relative z-10">
-                                        <span className={`font-bold font-rajdhani text-lg whitespace-nowrap ${tx.status === 'failed'
+                                            <div className="min-w-0 flex-1 text-left">
+                                                <div className="flex flex-wrap items-center justify-start gap-2 mb-0.5">
+                                                    <p className="font-semibold text-foreground capitalize text-sm truncate">
+                                                        {tx.description || tx.type}
+                                                    </p>
+
+                                                    {/* Status Badges */}
+                                                    {tx.status === 'pending' && (
+                                                        <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
+                                                            Pending
+                                                        </span>
+                                                    )}
+                                                    {tx.status === 'failed' && (
+                                                        <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
+                                                            Failed
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-muted-foreground truncate text-left">
+                                                    {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Content (Amount) */}
+                                        <div className="flex-shrink-0 relative z-10 ml-auto">
+                                            <span className={`font-bold font-rajdhani text-lg whitespace-nowrap ${tx.status === 'failed'
                                                 ? 'text-red-500 line-through opacity-70'
                                                 : (tx.type === 'prize' || tx.type === 'deposit'
                                                     ? "text-green-500"
                                                     : "text-foreground")
-                                            }`}>
-                                            {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Expanded Details */}
-                                {expandedTxId === tx.id && (
-                                    <div className="px-4 pb-4 pt-0 animate-in slide-in-from-top-2 duration-300">
-                                        <div className="h-px w-full bg-border/50 mb-3" />
-                                        <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
-                                            {/* ... existing details ... */}
-                                            <div className="col-span-2">
-                                                <p className="text-muted-foreground mb-1">Transaction ID</p>
-                                                <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5">
-                                                    {tx.id}
-                                                </p>
-                                            </div>
-
-                                            {tx.gatewayOrderId && (
-                                                <div className="col-span-2">
-                                                    <p className="text-muted-foreground mb-1">Gateway Ref</p>
-                                                    <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5">
-                                                        {tx.gatewayOrderId}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            <div>
-                                                <p className="text-muted-foreground mb-0.5">Type</p>
-                                                <p className="font-medium text-foreground capitalize">{tx.type}</p>
-                                            </div>
-
-                                            <div>
-                                                <p className="text-muted-foreground mb-0.5">Status</p>
-                                                <p className={`font-medium capitalize ${tx.status === 'success' ? 'text-green-500' :
-                                                        tx.status === 'pending' ? 'text-yellow-500' : 'text-red-500'
-                                                    }`}>
-                                                    {tx.status || 'Success'}
-                                                </p>
-                                            </div>
-
-                                            {tx.status === 'pending' && (
-                                                <div className="col-span-2 mt-2">
-                                                    <div className="text-yellow-500/80 italic text-[10px] text-center w-full">
-                                                        Checking status automatically...
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            verifyTransaction(tx);
-                                                        }}
-                                                        className="w-full mt-2 text-xs bg-primary/10 text-primary hover:bg-primary/20 py-2 rounded-lg transition-all font-bold opacity-50 hover:opacity-100"
-                                                    >
-                                                        Force Check
-                                                    </button>
-                                                </div>
-                                            )}
+                                                }`}>
+                                                {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
+                                            </span>
                                         </div>
                                     </div>
-                                )}
+
+                                    {/* Expanded Details */}
+                                    {expandedTxId === tx.id && (
+                                        <div className="px-4 pb-4 pt-0 animate-in slide-in-from-top-2 duration-300 text-left">
+                                            <div className="h-px w-full bg-border/50 mb-3" />
+                                            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                                                {/* ... existing details ... */}
+                                                <div className="col-span-2">
+                                                    <p className="text-muted-foreground mb-1 text-left">Transaction ID</p>
+                                                    <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5 text-left">
+                                                        {tx.id}
+                                                    </p>
+                                                </div>
+
+                                                {tx.gatewayOrderId && (
+                                                    <div className="col-span-2">
+                                                        <p className="text-muted-foreground mb-1 text-left">Gateway Ref</p>
+                                                        <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5 text-left">
+                                                            {tx.gatewayOrderId}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                <div>
+                                                    <p className="text-muted-foreground mb-0.5 text-left">Type</p>
+                                                    <p className="font-medium text-foreground capitalize text-left">{tx.type}</p>
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-muted-foreground mb-0.5 text-left">Status</p>
+                                                    <p className={`font-medium capitalize text-left ${tx.status === 'success' ? 'text-green-500' :
+                                                        tx.status === 'pending' ? 'text-yellow-500' : 'text-red-500'
+                                                        }`}>
+                                                        {tx.status || 'Success'}
+                                                    </p>
+                                                </div>
+
+                                                {tx.status === 'pending' && (
+                                                    <div className="col-span-2 mt-2">
+                                                        <div className="text-yellow-500/80 italic text-[10px] text-center w-full mb-1">
+                                                            Checking status automatically...
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                verifyTransaction(tx);
+                                                            }}
+                                                            className="w-full text-xs bg-primary/10 text-primary hover:bg-primary/20 py-2 rounded-lg transition-all font-bold opacity-50 hover:opacity-100"
+                                                        >
+                                                            Force Check
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {transactions.length > itemsPerPage && (
+                            <div className="flex items-center justify-between mt-6 pt-2 border-t border-border/40">
+                                <p className="text-xs text-muted-foreground">
+                                    Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, transactions.length)} of {transactions.length}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handlePrevPage}
+                                        disabled={currentPage === 1}
+                                        className="p-2 rounded-lg bg-card border border-primary/20 hover:bg-primary/10 disabled:opacity-30 disabled:hover:bg-card transition-all"
+                                    >
+                                        <ArrowDownLeft className="w-4 h-4 rotate-90" /> {/* Improvising left arrow with rotation or use simple text/other icon */}
+                                    </button>
+                                    <span className="text-xs font-bold font-rajdhani bg-primary/10 px-3 py-1.5 rounded-md text-primary">
+                                        {currentPage} / {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={handleNextPage}
+                                        disabled={currentPage === totalPages}
+                                        className="p-2 rounded-lg bg-card border border-primary/20 hover:bg-primary/10 disabled:opacity-30 disabled:hover:bg-card transition-all"
+                                    >
+                                        <ArrowUpRight className="w-4 h-4 rotate-90" /> {/* Improvising right arrow */}
+                                    </button>
+                                </div>
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 )}
             </div>
 
