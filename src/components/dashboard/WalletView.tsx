@@ -115,33 +115,27 @@ export default function WalletView() {
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
     const log = (msg: string) => setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
 
-    const manuallyCheck = async (tx: Transaction) => {
+    // Auto-verify pending transactions
+    const verifyTransaction = async (tx: Transaction, silent = false) => {
         if (!tx.id || !user) return;
         const oid = (tx as any).gatewayOrderId;
 
-        if (!oid) {
-            console.log("Tx Data:", tx);
-            alert(`No Order ID found. (Tx ID: ${tx.id}, Keys: ${Object.keys(tx).join(', ')})`);
-            return;
-        }
-
-        const confirmCheck = confirm("Check status with Gateway?");
-        if (!confirmCheck) return;
+        if (!oid) return;
 
         try {
-            alert("Checking status...");
+            if (!silent) alert("Checking status...");
+
             const res = await fetch('/api/payment/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderId: oid })
             });
             const data = await res.json();
-            console.log("Manual Check Data:", data);
 
             const rawStatus = data.data?.status || data.result?.status;
             const innerStatus = String(rawStatus || '').trim().toLowerCase();
-
             const isPaid = (innerStatus === 'success');
+            const isFailed = (innerStatus === 'failure' || innerStatus === 'failed');
 
             if (isPaid) {
                 let amount = 100;
@@ -149,34 +143,53 @@ export default function WalletView() {
                 else if (data.data?.amount) amount = parseFloat(String(data.data.amount));
 
                 if (isNaN(amount) || amount <= 0) amount = Number(tx.amount) || 100;
-
                 const finalAmount = Number(amount);
 
                 await updateDoc(doc(db, "transactions", tx.id), {
                     status: 'success',
                     description: "Wallet Recharge",
                     amount: finalAmount,
-                    gatewayRef: data.upi_txn_id || "Manual Check"
+                    gatewayRef: data.upi_txn_id || "Auto-Verified"
                 });
 
                 await setDoc(doc(db, "users", user.uid), {
                     walletBalance: increment(finalAmount)
                 }, { merge: true });
 
-                console.log(`Updated balance by ${amount}`);
-                alert(`Transaction Confirmed! Added ₹${amount} to wallet.`);
-            } else if (data.status === 'error' && data.message?.includes('Record not found')) {
-                alert("Gateway says Record Not Found. (Likely failed or invalid ID)");
+                if (!silent) alert(`Transaction Verified! Added ₹${amount} to wallet.`);
+
+            } else if (isFailed || (data.status === 'error' && data.message?.includes('Record not found'))) {
+                // Mark as failed if gateway confirms failure
+                await updateDoc(doc(db, "transactions", tx.id), {
+                    status: 'failed',
+                    description: "Recharge Failed",
+                    gatewayRef: data.message || "Gateway Failed"
+                });
+                if (!silent) alert("Transaction marked as failed.");
             } else {
-                alert(`Transaction Pending or Failed.\nGateway Status: "${rawStatus}" (Normalized: ${innerStatus})\nAPI Message: ${data.message || ''}`);
+                if (!silent) alert(`Status: ${innerStatus}`);
             }
 
         } catch (e: any) {
-            alert("Error checking: " + e.message);
+            console.error("Verification error:", e);
+            if (!silent) alert("Error checking status");
         }
     };
 
-    // Handle Payment Verification
+    // Auto-check effect
+    useEffect(() => {
+        if (!transactions.length) return;
+
+        const pendingTxs = transactions.filter(tx => tx.status === 'pending');
+        if (pendingTxs.length > 0) {
+            console.log(`Auto-verifying ${pendingTxs.length} pending transactions...`);
+            pendingTxs.forEach(tx => verifyTransaction(tx, true));
+        }
+
+        // Optional: Set up an interval? For now one check on load/update is good
+    }, [transactions]); // Will re-run when transactions list updates (from snapshots)
+
+    // Handle Payment Verification (Redirect)
     useEffect(() => {
         const checkPayment = async () => {
             const status = searchParams.get('status');
@@ -204,14 +217,14 @@ export default function WalletView() {
                             const txDoc = txSnap.docs[0];
                             const txData = txDoc.data();
 
+                            // Use our unified function logic implicitly here by just marking success directly 
+                            // as we are in the redirect flow which is critical
                             if (txData.status !== 'success') {
                                 let amount = 100;
                                 if (data.amount) amount = parseFloat(String(data.amount));
                                 else if (data.data?.amount) amount = parseFloat(String(data.data.amount));
 
                                 if (isNaN(amount) || amount <= 0) amount = txData.amount || 100;
-
-                                log(`Updating pending transaction ${txDoc.id} to success. Amount: ${amount}`);
 
                                 await updateDoc(doc(db, "transactions", txDoc.id), {
                                     status: 'success',
@@ -224,20 +237,17 @@ export default function WalletView() {
                                     walletBalance: increment(amount)
                                 }, { merge: true });
 
-                                log("Firestore updated successfully.");
                                 alert(`Success! Added ₹${amount}`);
                                 router.replace('/');
                             } else {
-                                log("Transaction already marked success.");
                                 alert("Transaction already processed");
                                 router.replace('/');
                             }
                         } else {
-                            log("No pending doc found, creating new.");
+                            // Recover lost tx
                             let amount = 100;
                             if (data.amount) amount = parseFloat(String(data.amount));
                             else if (data.data?.amount) amount = parseFloat(String(data.data.amount));
-
                             if (isNaN(amount) || amount <= 0) amount = 100;
 
                             await addDoc(collection(db, "transactions"), {
@@ -259,7 +269,9 @@ export default function WalletView() {
                             router.replace('/');
                         }
                     } else {
-                        log("Payment status failed or pending.");
+                        // Fail explicitly if status is failed
+                        alert("Payment Failed or Pending");
+                        router.replace('/');
                     }
                 } catch (error: any) {
                     log(`Error: ${error.message}`);
@@ -404,60 +416,64 @@ export default function WalletView() {
                                 key={tx.id}
                                 onClick={() => toggleExpand(tx.id)}
                                 className={`relative overflow-hidden rounded-xl transition-all duration-300 border group cursor-pointer ${expandedTxId === tx.id
-                                    ? 'bg-card/80 border-primary/30 ring-1 ring-primary/20 shadow-lg'
-                                    : 'bg-card/50 hover:bg-card/80 border-border/50 hover:border-primary/20'
+                                        ? 'bg-card/80 border-primary/30 ring-1 ring-primary/20 shadow-lg'
+                                        : 'bg-card/50 hover:bg-card/80 border-border/50 hover:border-primary/20'
                                     }`}
                             >
-                                {/* Transaction Header */}
-                                <div className="flex items-center justify-between p-3.5">
+                                {/* Transaction Header - Clean Layout */}
+                                <div className="flex items-center justify-between p-3.5 gap-4">
                                     {/* Subtle glass shine on hover */}
                                     <div className="glass-shine" />
 
-                                    <div className="flex items-center gap-3 relative z-10">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === 'pending'
-                                            ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
-                                            : tx.status === 'failed'
-                                                ? 'bg-red-500/10 text-red-500 border border-red-500/30'
-                                                : (tx.type === 'prize' || tx.type === 'deposit'
-                                                    ? 'bg-green-500/10 text-green-500 border border-green-500/30'
-                                                    : 'bg-primary/10 text-primary border border-primary/30')
+                                    {/* Left Content (Icon + Text) */}
+                                    <div className="flex items-center gap-3 min-w-0 relative z-10">
+                                        {/* Simplified Icon Container - No Spinners */}
+                                        <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border transition-colors duration-300 ${tx.status === 'pending'
+                                                ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                                                : tx.status === 'failed'
+                                                    ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                                    : (tx.type === 'prize' || tx.type === 'deposit'
+                                                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                                        : 'bg-primary/10 text-primary border-primary/20')
                                             }`}>
-                                            {tx.status === 'pending'
-                                                ? <Loader2 size={18} className="animate-spin" />
-                                                : (tx.type === 'prize' || tx.type === 'deposit'
-                                                    ? <ArrowDownLeft size={18} />
-                                                    : <ArrowUpRight size={18} />)
+                                            {/* Fixed Icons based on direction mainly */}
+                                            {tx.type === 'prize' || tx.type === 'deposit'
+                                                ? <ArrowDownLeft size={18} />
+                                                : <ArrowUpRight size={18} />
                                             }
                                         </div>
 
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-0.5">
-                                                <p className="font-semibold text-foreground capitalize text-sm">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                                <p className="font-semibold text-foreground capitalize text-sm truncate">
                                                     {tx.description || tx.type}
                                                 </p>
+
+                                                {/* Status Badges */}
                                                 {tx.status === 'pending' && (
-                                                    <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                                                    <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
                                                         Pending
                                                     </span>
                                                 )}
                                                 {tx.status === 'failed' && (
-                                                    <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                                                    <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide flex-shrink-0">
                                                         Failed
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-[11px] text-muted-foreground">
+                                            <p className="text-[11px] text-muted-foreground truncate">
                                                 {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2.5 relative z-10">
-                                        <span className={`font-bold font-rajdhani text-lg ${tx.status === 'failed'
-                                            ? 'text-red-500 line-through'
-                                            : (tx.type === 'prize' || tx.type === 'deposit'
-                                                ? "text-green-500"
-                                                : "text-foreground")
+                                    {/* Right Content (Amount) */}
+                                    <div className="flex-shrink-0 relative z-10">
+                                        <span className={`font-bold font-rajdhani text-lg whitespace-nowrap ${tx.status === 'failed'
+                                                ? 'text-red-500 line-through opacity-70'
+                                                : (tx.type === 'prize' || tx.type === 'deposit'
+                                                    ? "text-green-500"
+                                                    : "text-foreground")
                                             }`}>
                                             {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
                                         </span>
@@ -469,6 +485,7 @@ export default function WalletView() {
                                     <div className="px-4 pb-4 pt-0 animate-in slide-in-from-top-2 duration-300">
                                         <div className="h-px w-full bg-border/50 mb-3" />
                                         <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                                            {/* ... existing details ... */}
                                             <div className="col-span-2">
                                                 <p className="text-muted-foreground mb-1">Transaction ID</p>
                                                 <p className="font-mono text-xs bg-muted/50 p-1.5 rounded select-all text-foreground/80 break-all border border-white/5">
@@ -493,7 +510,7 @@ export default function WalletView() {
                                             <div>
                                                 <p className="text-muted-foreground mb-0.5">Status</p>
                                                 <p className={`font-medium capitalize ${tx.status === 'success' ? 'text-green-500' :
-                                                    tx.status === 'pending' ? 'text-yellow-500' : 'text-red-500'
+                                                        tx.status === 'pending' ? 'text-yellow-500' : 'text-red-500'
                                                     }`}>
                                                     {tx.status || 'Success'}
                                                 </p>
@@ -501,14 +518,17 @@ export default function WalletView() {
 
                                             {tx.status === 'pending' && (
                                                 <div className="col-span-2 mt-2">
+                                                    <div className="text-yellow-500/80 italic text-[10px] text-center w-full">
+                                                        Checking status automatically...
+                                                    </div>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            manuallyCheck(tx);
+                                                            verifyTransaction(tx);
                                                         }}
-                                                        className="w-full text-xs bg-primary/20 text-primary hover:bg-primary/30 py-2 rounded-lg transition-all font-bold"
+                                                        className="w-full mt-2 text-xs bg-primary/10 text-primary hover:bg-primary/20 py-2 rounded-lg transition-all font-bold opacity-50 hover:opacity-100"
                                                     >
-                                                        Check Status with Gateway
+                                                        Force Check
                                                     </button>
                                                 </div>
                                             )}
