@@ -120,94 +120,136 @@ export default function TournamentCard({
     };
 
     const isFull = currentSlots >= maxSlots;
-    const progress = (currentSlots / maxSlots) * 100;
+    const participantPercentage = (currentSlots / maxSlots) * 100;
 
     return (
-        <div className="group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.3)]">
-            {/* Banner */}
-            <div className="h-40 w-full bg-gradient-to-br from-neutral-900 to-neutral-800 group-hover:scale-105 transition-transform duration-500 relative">
-                <div className="absolute inset-0 bg-primary/10 mix-blend-overlay" />
-                <div className="absolute top-3 right-3 flex gap-2">
-                    <span className="bg-black/60 text-white text-xs font-bold px-2 py-1 rounded backdrop-blur-md uppercase">{game}</span>
-                    {isLive && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse shadow-lg shadow-red-500/20">LIVE</span>
-                    )}
+        <div className="group relative card-premium tournament-card p-6 cursor-pointer">
+            {/* Shine effect on hover */}
+            <div className="card-shine" />
+
+            {/* Status indicator with pulse animation */}
+            {isLive && (
+                <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+                    <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                    </span>
+                    <span className="text-xs font-bold text-red-400 uppercase tracking-wide">Live</span>
                 </div>
-                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
+            )}
+
+            {/* Game icon with hover rotation */}
+            <div className="mb-4 transition-transform duration-300 group-hover:rotate-6">
+                <Gamepad2 className="w-10 h-10 text-primary/60" />
             </div>
 
-            <div className="p-5 relative">
-                <h3 className="font-rajdhani font-bold text-2xl text-white mb-1 group-hover:text-primary transition-colors truncate">{title}</h3>
-                <p className="text-muted-foreground text-sm mb-4">Battle Royale • Squad • {game}</p>
+            {/* Title with gradient on hover */}
+            <h3 className="text-xl font-bold mb-3 transition-all duration-300 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-primary group-hover:to-primary/60 font-rajdhani">
+                {title}
+            </h3>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="flex items-center gap-2 text-sm text-neutral-300">
-                        <Trophy className="text-yellow-500 h-4 w-4" />
-                        <span>Prize: <span className="font-bold text-white text-yellow-400">₹{prizePool}</span></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-neutral-300">
-                        <Coins className="text-primary h-4 w-4" />
-                        <span>Entry: <span className="font-bold text-white text-green-400">₹{entryFee}</span></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-neutral-300 col-span-2">
-                        <Users className="text-blue-400 h-4 w-4" />
-                        <span>{currentSlots}/{maxSlots} Joined</span>
-                        <div className="ml-auto w-24 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary/80 transition-all duration-500" style={{ width: `${progress}%` }} />
-                        </div>
-                    </div>
+            {/* Game badge */}
+            {game && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-4 bg-primary/10 rounded-full border border-primary/20">
+                    <span className="text-xs font-semibold text-primary uppercase tracking-wide">{game}</span>
+                </div>
+            )}
+
+            {/* Prize pool with animated icon */}
+            <div className="flex items-center gap-2 mb-4">
+                <Trophy className="w-5 h-5 text-yellow-500 transition-transform duration-300 group-hover:scale-110" />
+                <span className="text-lg font-bold text-yellow-400">{prizePool}</span>
+            </div>
+
+            {/* Participants progress section */}
+            <div className="mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                        <Users className="w-4 h-4" />
+                        Participants
+                    </span>
+                    <span className="font-medium text-foreground">
+                        {currentSlots}/{maxSlots}
+                    </span>
                 </div>
 
+                {/* Animated progress bar */}
+                <div className="relative h-2 bg-muted/30 rounded-full overflow-hidden">
+                    <div
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/80 to-primary rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${participantPercentage}%` }}
+                    >
+                        {/* Shimmer effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Entry fee and Join button */}
+            <div className="flex items-center justify-between mt-6">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
+                    <Coins className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-semibold text-foreground">{entryFee}</span>
+                </div>
+
+                {/* Join Dialog */}
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                        <button disabled={isFull} className="w-full py-3 bg-white/5 hover:bg-primary hover:text-white border border-white/10 hover:border-primary rounded-xl font-bold font-rajdhani tracking-wide transition-all duration-300 shadow-lg shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/5 disabled:hover:text-inherit disabled:hover:border-white/10">
-                            {isFull ? "FULL" : "JOIN TOURNAMENT"}
+                        <button disabled={isFull} className="px-6 py-2 bg-primary text-primary-foreground font-bold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/50 font-rajdhani disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none">
+                            {isFull ? "FULL" : "Join Now"}
                         </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-neutral-900 border-white/10 text-white sm:max-w-md">
+                    <DialogContent className="glass-effect border-border">
                         <DialogHeader>
-                            <DialogTitle className="font-rajdhani text-2xl">Confirm Registration</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold font-rajdhani">Join Tournament</DialogTitle>
                         </DialogHeader>
-
-                        <div className="py-4 space-y-4">
-                            <div className="p-4 bg-black/40 rounded-lg border border-white/5 space-y-2">
-                                <h4 className="text-sm font-bold text-muted-foreground uppercase">Confirmation Details</h4>
-                                <div className="flex justify-between text-sm">
-                                    <span>Tournament</span>
-                                    <span className="font-bold text-white">{title}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span>Entry Fee</span>
-                                    <span className="font-bold text-green-400">₹{entryFee}</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="ingame">In-Game Name (IGN)</Label>
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="ingameName" className="text-sm font-medium">In-Game Name</Label>
                                 <Input
-                                    id="ingame"
-                                    placeholder="e.g. Mortal"
-                                    className="bg-black/50 border-white/10"
+                                    id="ingameName"
+                                    placeholder="Enter your in-game ID"
                                     value={ingameName}
                                     onChange={(e) => setIngameName(e.target.value)}
+                                    className="mt-2 bg-card/50 border-border focus:border-primary transition-colors"
+                                    disabled={isLoading}
                                 />
-                                <p className="text-xs text-muted-foreground">Make sure this matches your name in {game} exactly.</p>
+                            </div>
+                            <div className="p-4 bg-muted/20 rounded-lg border border-border/50 space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-muted-foreground">Entry Fee:</span>
+                                    <span className="font-bold text-foreground">₹{entryFee}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-muted-foreground">Prize Pool:</span>
+                                    <span className="font-bold text-yellow-400">₹{prizePool}</span>
+                                </div>
                             </div>
                         </div>
-
-                        <DialogFooter>
+                        <DialogFooter className="gap-3">
                             <Button
-                                className="w-full bg-primary hover:bg-primary/90 font-bold"
+                                variant="outline"
+                                onClick={() => setIsOpen(false)}
+                                disabled={isLoading}
+                                className="border-border hover:bg-muted/50"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
                                 onClick={handleJoin}
                                 disabled={isLoading}
+                                className="btn-premium"
                             >
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isLoading ? "Registering..." : `Pay ₹${entryFee} & Join`}
+                                {isLoading ? "Joining..." : "Confirm Join"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
+
+            {/* Glow effect on hover */}
+            <div className="absolute -inset-px bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 rounded-xl opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100 -z-10" />
         </div>
     );
 }
