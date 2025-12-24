@@ -20,11 +20,10 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    /* Primary: Neon Green */
-    /* hex #39ff14 -> hsl(111 100% 54%) */
-    --primary: 111 100% 54%;
-    --primary-foreground: 0 0% 0%;
-    /* Black text on neon green for contrast */
+    /* Primary: Light Gray (Monochrome Accent) */
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    /* Dark text on light background */
 
     /* Secondary: Muted Grey */
     --secondary: 240 3.7% 15.9%;
@@ -46,8 +45,8 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
 
-    /* Ring: Focus state (Neon Green) */
-    --ring: 111 100% 54%;
+    /* Ring: Focus state (Light Gray) */
+    --ring: 0 0% 98%;
 
     --radius: 0.6rem;
 
@@ -64,28 +63,7 @@
     /* Very Dark Grey */
   }
 
-  /* No separate dark mode block needed as we are enforcing dark theme defaults in :root */
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 16 100% 55%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 16 100% 55%;
-  }
+  /* Dark mode inherits from :root - no overrides needed for monochrome theme */
 }
 
 @layer base {
