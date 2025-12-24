@@ -50,32 +50,30 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
+        <div className="min-h-screen bg-background text-foreground relative">
             <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            <div className="flex-1 w-full pl-16 lg:pl-52 transition-all duration-300 flex flex-col">
-                <main className="flex-1 p-4 lg:p-6 w-full max-w-full">
-                    <div className="w-full space-y-6">
-                        {/* Header */}
-                        <div ref={headerRef}>
-                            <h1 className="text-2xl font-bold font-rajdhani text-foreground">
-                                {activeTab === 'tournaments' ? 'Tournaments' : 'Users'}
-                            </h1>
-                            <p className="text-sm text-muted-foreground">
-                                {activeTab === 'tournaments'
-                                    ? 'Create and manage tournaments'
-                                    : 'Manage users and balances'
-                                }
-                            </p>
-                        </div>
-
-                        {/* Content */}
-                        <div ref={mainRef} className="bg-card border border-border rounded-xl p-6">
-                            {activeTab === 'tournaments' ? <AdminTournaments /> : <AdminUsers />}
-                        </div>
+            <main className="w-full min-h-screen pl-16 lg:pl-52 pr-4 lg:pr-6 py-4 lg:py-6 box-border">
+                <div className="w-full space-y-6">
+                    {/* Header */}
+                    <div ref={headerRef}>
+                        <h1 className="text-2xl font-bold font-rajdhani text-foreground">
+                            {activeTab === 'tournaments' ? 'Tournaments' : 'Users'}
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            {activeTab === 'tournaments'
+                                ? 'Create and manage tournaments'
+                                : 'Manage users and balances'
+                            }
+                        </p>
                     </div>
-                </main>
-            </div>
+
+                    {/* Content */}
+                    <div ref={mainRef} className="bg-card border border-border rounded-xl p-6 w-full">
+                        {activeTab === 'tournaments' ? <AdminTournaments /> : <AdminUsers />}
+                    </div>
+                </div>
+            </main>
         </div>
     );
 }
