@@ -79,7 +79,7 @@ export default function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarPr
     return (
         <aside
             ref={sidebarRef}
-            className="w-20 lg:w-64 h-screen bg-background border-r border-border/40 flex flex-col justify-between fixed left-0 top-0 z-50"
+            className="w-16 lg:w-52 h-screen bg-background border-r border-border/40 flex flex-col justify-between fixed left-0 top-0 z-50"
         >
             <div className="flex flex-col flex-1 min-h-0">
                 {/* Header */}

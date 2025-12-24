@@ -79,7 +79,7 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
     return (
         <aside
             ref={sidebarRef}
-            className="hidden lg:flex w-64 h-[100dvh] bg-background border-r border-border/40 flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
+            className="hidden lg:flex w-52 h-[100dvh] bg-background border-r border-border/40 flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
         >
             <div className="flex flex-col flex-1 min-h-0">
                 {/* Logo Header - Minimal, No Border */}

@@ -53,7 +53,7 @@ export default function AdminPage() {
         <div className="min-h-screen bg-background text-foreground flex">
             <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            <main className="flex-1 ml-20 lg:ml-64 p-6 lg:p-8">
+            <main className="flex-1 ml-16 lg:ml-52 p-6 lg:p-8">
                 <div className="max-w-6xl mx-auto space-y-6">
                     {/* Header */}
                     <div ref={headerRef}>

@@ -17,7 +17,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             <MobileNav onLoginClick={() => setIsLoginOpen(true)} user={user} />
             <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
-            <div className="flex-1 lg:pl-64 transition-all duration-300">
+            <div className="flex-1 lg:pl-52 transition-all duration-300">
                 <DashboardHeader />
                 <main className="p-4 lg:p-8 max-w-[1600px] mx-auto pt-4">
                     {children}
