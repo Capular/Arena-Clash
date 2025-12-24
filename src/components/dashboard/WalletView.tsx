@@ -383,12 +383,12 @@ export default function WalletView() {
                                 <div className="flex items-center gap-4">
                                     {/* Status Icon */}
                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${tx.status === 'pending'
-                                            ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
-                                            : tx.status === 'failed'
-                                                ? 'bg-red-500/10 text-red-500 border border-red-500/30'
-                                                : (tx.type === 'prize' || tx.type === 'deposit'
-                                                    ? 'bg-green-500/10 text-green-500 border border-green-500/30'
-                                                    : 'bg-primary/10 text-primary border border-primary/30')
+                                        ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
+                                        : tx.status === 'failed'
+                                            ? 'bg-red-500/10 text-red-500 border border-red-500/30'
+                                            : (tx.type === 'prize' || tx.type === 'deposit'
+                                                ? 'bg-green-500/10 text-green-500 border border-green-500/30'
+                                                : 'bg-primary/10 text-primary border border-primary/30')
                                         } group-hover:scale-110`}>
                                         {tx.status === 'pending'
                                             ? <Loader2 size={20} className="animate-spin" />
@@ -430,10 +430,10 @@ export default function WalletView() {
                                         </button>
                                     )}
                                     <span className={`font-bold font-rajdhani text-xl ${tx.status === 'failed'
-                                            ? 'text-red-500 line-through'
-                                            : (tx.type === 'prize' || tx.type === 'deposit'
-                                                ? "text-green-500"
-                                                : "text-foreground")
+                                        ? 'text-red-500 line-through'
+                                        : (tx.type === 'prize' || tx.type === 'deposit'
+                                            ? "text-green-500"
+                                            : "text-foreground")
                                         }`}>
                                         {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
                                     </span>
@@ -448,18 +448,3 @@ export default function WalletView() {
         </div>
     );
 }
-
-{/* Add keyframes animation for transaction items */ }
-<style jsx global>{`
-    @keyframes fadeInSlide {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-`}</style>
-```
