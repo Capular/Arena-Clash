@@ -17,7 +17,7 @@ interface SidebarProps {
 
 export default function Sidebar({ onLoginClick }: SidebarProps) {
     const sidebarRef = useRef(null);
-    const { user, loading } = useAuth();
+    const { user, loading, isAdmin } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
 
@@ -129,7 +129,7 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
                                     Settings
                                 </button>
                                 {/* Admin Link */}
-                                {(user as any).role === 'admin' && (
+                                {isAdmin && (
                                     <button
                                         onClick={() => {
                                             router.push("/admin");
