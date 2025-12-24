@@ -292,25 +292,25 @@ export default function WalletView() {
 
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                                <CreditCard className="w-5 h-5 text-primary" />
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                <CreditCard className="w-4 h-4 text-primary" />
                             </div>
-                            <p className="text-primary font-semibold text-sm uppercase tracking-wider">Total Balance</p>
+                            <p className="text-primary font-semibold text-xs uppercase tracking-wider">Total Balance</p>
                         </div>
 
-                        <h2 className="text-5xl lg:text-6xl font-bold font-rajdhani text-foreground mb-8 tracking-tight">
+                        <h2 className="text-4xl font-bold font-rajdhani text-foreground mb-6 tracking-tight">
                             ₹{balance.toFixed(2)}
                         </h2>
 
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setIsPaymentModalOpen(true)}
-                                className="flex-1 btn-premium flex items-center justify-center gap-2 group/btn"
+                                className="flex-1 btn-premium flex items-center justify-center gap-2 group/btn text-sm py-2.5"
                             >
                                 <ArrowDownLeft className="w-4 h-4 transition-transform group-hover/btn:rotate-12" />
                                 Add Funds
                             </button>
-                            <button className="flex-1 glass-effect py-3 rounded-lg font-bold font-rajdhani transition-all hover:scale-105 hover:shadow-lg border border-primary/20 hover:border-primary/40 flex items-center justify-center gap-2 group/btn">
+                            <button className="flex-1 glass-effect py-2.5 rounded-lg font-bold font-rajdhani text-sm transition-all hover:scale-105 hover:shadow-lg border border-primary/20 hover:border-primary/40 flex items-center justify-center gap-2 group/btn">
                                 <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:-rotate-12" />
                                 Withdraw
                             </button>
@@ -324,39 +324,39 @@ export default function WalletView() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 gap-4">
                     {/* Winnings Card */}
-                    <div className="card-premium p-6 flex flex-col justify-between group hover:border-green-500/30 transition-all">
-                        <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mb-4 border border-green-500/20 transition-transform group-hover:scale-110 duration-300">
-                            <ArrowDownLeft size={24} className="transition-transform group-hover:rotate-12" />
+                    <div className="card-premium p-5 flex flex-col justify-between group hover:border-green-500/30 transition-all">
+                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mb-3 border border-green-500/20 transition-transform group-hover:scale-110 duration-300">
+                            <ArrowDownLeft size={20} className="transition-transform group-hover:rotate-12" />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm font-medium mb-1">Total Winnings</p>
-                            <p className="text-3xl font-bold text-green-400 font-rajdhani">₹{stats.winnings.toFixed(2)}</p>
+                            <p className="text-muted-foreground text-xs font-medium mb-1">Total Winnings</p>
+                            <p className="text-2xl font-bold text-green-400 font-rajdhani">₹{stats.winnings.toFixed(2)}</p>
                         </div>
                     </div>
 
                     {/* Spent Card */}
-                    <div className="card-premium p-6 flex flex-col justify-between group hover:border-primary/30 transition-all">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 border border-primary/20 transition-transform group-hover:scale-110 duration-300">
-                            <ArrowUpRight size={24} className="transition-transform group-hover:-rotate-12" />
+                    <div className="card-premium p-5 flex flex-col justify-between group hover:border-primary/30 transition-all">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3 border border-primary/20 transition-transform group-hover:scale-110 duration-300">
+                            <ArrowUpRight size={20} className="transition-transform group-hover:-rotate-12" />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm font-medium mb-1">Total Spent</p>
-                            <p className="text-3xl font-bold text-foreground font-rajdhani">₹{stats.spent.toFixed(2)}</p>
+                            <p className="text-muted-foreground text-xs font-medium mb-1">Total Spent</p>
+                            <p className="text-2xl font-bold text-foreground font-rajdhani">₹{stats.spent.toFixed(2)}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Premium Transactions Section */}
-            <div className="card-premium p-6 lg:p-8">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-rajdhani font-bold text-2xl text-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <History className="text-primary" size={20} />
+            <div className="card-premium p-6">
+                <div className="flex items-center justify-between mb-5">
+                    <h3 className="font-rajdhani font-bold text-xl text-foreground flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <History className="text-primary" size={16} />
                         </div>
                         Recent Transactions
                     </h3>
-                    <button className="text-sm text-primary hover:text-primary/80 font-semibold transition-colors hover:underline underline-offset-4">
+                    <button className="text-xs text-primary hover:text-primary/80 font-semibold transition-colors hover:underline underline-offset-4">
                         View All →
                     </button>
                 </div>
@@ -374,66 +374,66 @@ export default function WalletView() {
                         {transactions.map((tx, index) => (
                             <div
                                 key={tx.id}
-                                className="flex items-center justify-between p-4 rounded-xl glass-effect hover:bg-primary/5 transition-all duration-300 border border-border/50 hover:border-primary/30 group"
+                                className="flex items-center justify-between p-3.5 rounded-xl glass-effect hover:bg-primary/5 transition-all duration-300 border border-border/50 hover:border-primary/30 group"
                                 style={{
                                     animationDelay: `${index * 50}ms`,
                                     animation: 'fadeInSlide 0.4s ease-out forwards',
                                 }}
                             >
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3">
                                     {/* Status Icon */}
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${tx.status === 'pending'
-                                        ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
-                                        : tx.status === 'failed'
-                                            ? 'bg-red-500/10 text-red-500 border border-red-500/30'
-                                            : (tx.type === 'prize' || tx.type === 'deposit'
-                                                ? 'bg-green-500/10 text-green-500 border border-green-500/30'
-                                                : 'bg-primary/10 text-primary border border-primary/30')
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${tx.status === 'pending'
+                                            ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
+                                            : tx.status === 'failed'
+                                                ? 'bg-red-500/10 text-red-500 border border-red-500/30'
+                                                : (tx.type === 'prize' || tx.type === 'deposit'
+                                                    ? 'bg-green-500/10 text-green-500 border border-green-500/30'
+                                                    : 'bg-primary/10 text-primary border border-primary/30')
                                         } group-hover:scale-110`}>
                                         {tx.status === 'pending'
-                                            ? <Loader2 size={20} className="animate-spin" />
+                                            ? <Loader2 size={18} className="animate-spin" />
                                             : (tx.type === 'prize' || tx.type === 'deposit'
-                                                ? <ArrowDownLeft size={20} />
-                                                : <ArrowUpRight size={20} />)
+                                                ? <ArrowDownLeft size={18} />
+                                                : <ArrowUpRight size={18} />)
                                         }
                                     </div>
 
                                     <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <p className="font-bold text-foreground capitalize">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                            <p className="font-semibold text-foreground capitalize text-sm">
                                                 {tx.description || tx.type}
                                             </p>
                                             {tx.status === 'pending' && (
-                                                <span className="text-[10px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide">
+                                                <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
                                                     Pending
                                                 </span>
                                             )}
                                             {tx.status === 'failed' && (
-                                                <span className="text-[10px] bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide">
+                                                <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
                                                     Failed
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-[11px] text-muted-foreground">
                                             {tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString() : 'Just now'}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                     {tx.status === 'pending' && (
                                         <button
                                             onClick={() => manuallyCheck(tx)}
-                                            className="text-xs bg-primary/20 text-primary hover:bg-primary/30 px-3 py-2 rounded-lg transition-all font-bold hover:scale-105"
+                                            className="text-[11px] bg-primary/20 text-primary hover:bg-primary/30 px-2.5 py-1.5 rounded-lg transition-all font-bold hover:scale-105"
                                         >
-                                            Check Status
+                                            Check
                                         </button>
                                     )}
-                                    <span className={`font-bold font-rajdhani text-xl ${tx.status === 'failed'
-                                        ? 'text-red-500 line-through'
-                                        : (tx.type === 'prize' || tx.type === 'deposit'
-                                            ? "text-green-500"
-                                            : "text-foreground")
+                                    <span className={`font-bold font-rajdhani text-lg ${tx.status === 'failed'
+                                            ? 'text-red-500 line-through'
+                                            : (tx.type === 'prize' || tx.type === 'deposit'
+                                                ? "text-green-500"
+                                                : "text-foreground")
                                         }`}>
                                         {tx.type === 'prize' || tx.type === 'deposit' ? "+" : "-"} ₹{tx.amount.toFixed(2)}
                                     </span>
