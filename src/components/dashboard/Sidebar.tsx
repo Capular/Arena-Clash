@@ -48,16 +48,16 @@ export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: Sideb
     return (
         <aside
             ref={sidebarRef}
-            className="hidden lg:flex w-64 h-screen border-r border-border bg-card/50 backdrop-blur-xl flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
+            className="hidden lg:flex w-64 h-[100dvh] border-r border-border bg-card/50 backdrop-blur-xl flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
         >
-            <div>
-                <div className="h-20 flex items-center justify-center border-b border-border/50">
+            <div className="flex flex-col flex-1 min-h-0">
+                <div className="h-20 flex-shrink-0 flex items-center justify-center border-b border-border/50">
                     <h1 className="font-rajdhani font-bold text-2xl text-primary tracking-wider uppercase">
                         Arena Clash
                     </h1>
                 </div>
 
-                <nav className="p-4 space-y-2">
+                <nav className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
@@ -81,11 +81,11 @@ export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: Sideb
                 </nav>
             </div>
 
-            <div className="p-4 border-t border-border/50">
+            <div className="p-4 border-t border-border/50 flex-shrink-0">
                 {!loading && user ? (
                     <div
                         onClick={() => setActiveTab("settings")}
-                        className="mt-4 flex items-center gap-3 px-3 py-2 bg-black/20 rounded-lg relative group cursor-pointer hover:bg-black/30 transition-colors"
+                        className="flex items-center gap-3 px-3 py-2 bg-black/20 rounded-lg relative group cursor-pointer hover:bg-black/30 transition-colors"
                     >
                         <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden">
                             {user.photoURL ? <img src={user.photoURL} alt="User" className="h-full w-full object-cover" /> : <User size={16} />}
@@ -101,7 +101,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: Sideb
                 ) : (
                     <button
                         onClick={onLoginClick}
-                        className="mt-4 w-full bg-primary text-white py-2 rounded-lg font-bold font-rajdhani hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                        className="w-full bg-primary text-black py-3 rounded-lg font-bold font-rajdhani hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                     >
                         Login
                     </button>
