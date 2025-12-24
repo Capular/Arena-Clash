@@ -3,7 +3,7 @@
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Bell } from "lucide-react";
 import { useState, useEffect } from "react";
-import { collection, query, where, orderBy, onSnapshot, limit } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
@@ -14,8 +14,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-const GAMES = ["Free Fire"];
-
 export default function DashboardHeader() {
     const { user } = useAuth();
     const router = useRouter();
@@ -23,11 +21,23 @@ export default function DashboardHeader() {
     const searchParams = useSearchParams();
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [gamesList, setGamesList] = useState<string[]>(["Free Fire"]);
 
     const activeTab = pathname === "/" ? "tournaments" : pathname.split("/").pop();
 
     // Get game from URL or default
     const selectedGame = searchParams.get("game") || "Free Fire";
+
+    // Fetch active games
+    useEffect(() => {
+        const fetchGames = async () => {
+            const q = query(collection(db, "games"), where("isActive", "==", true));
+            const snapshot = await getDocs(q);
+            const games = snapshot.docs.map(doc => doc.data().name);
+            if (games.length > 0) setGamesList(games);
+        };
+        fetchGames();
+    }, []);
 
     const handleGameChange = (game: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -65,7 +75,7 @@ export default function DashboardHeader() {
                                 <SelectValue placeholder="Select Game" />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-border text-foreground">
-                                {GAMES.map((game) => (
+                                {gamesList.map((game) => (
                                     <SelectItem
                                         key={game}
                                         value={game}
@@ -121,7 +131,7 @@ export default function DashboardHeader() {
             {isTournaments && (
                 <div className="lg:hidden px-4 pb-4 overflow-x-auto no-scrollbar">
                     <div className="flex gap-2">
-                        {GAMES.map(game => (
+                        {gamesList.map(game => (
                             <button
                                 key={game}
                                 onClick={() => handleGameChange(game)}

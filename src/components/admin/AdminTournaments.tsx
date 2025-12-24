@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Plus, Trash2, Gamepad2, X, Loader2 } from "lucide-react";
 import gsap from "gsap";
@@ -42,6 +42,18 @@ export default function AdminTournaments() {
         roomId: '',
         roomPassword: ''
     });
+    const [gamesList, setGamesList] = useState<string[]>([]);
+
+    // Fetch games for dropdown
+    useEffect(() => {
+        const fetchGames = async () => {
+            const q = query(collection(db, "games"), where("isActive", "==", true));
+            const snapshot = await getDocs(q);
+            const games = snapshot.docs.map(doc => doc.data().name);
+            setGamesList(games.length > 0 ? games : ["Free Fire"]);
+        };
+        fetchGames();
+    }, []);
 
     const fetchTournaments = async () => {
         const q = query(collection(db, "tournaments"), orderBy("date", "desc"));
@@ -132,8 +144,8 @@ export default function AdminTournaments() {
                                 <p className="text-sm font-medium">₹{t.entryFee} / ₹{t.prizePool}</p>
                             </div>
                             <span className={`text-xs px-2 py-1 rounded font-medium ${t.status === 'live' ? 'bg-red-500/10 text-red-500' :
-                                    t.status === 'completed' ? 'bg-muted text-muted-foreground' :
-                                        'bg-primary/10 text-primary'
+                                t.status === 'completed' ? 'bg-muted text-muted-foreground' :
+                                    'bg-primary/10 text-primary'
                                 }`}>
                                 {t.status}
                             </span>
@@ -163,7 +175,9 @@ export default function AdminTournaments() {
                                         value={formData.game}
                                         onChange={e => setFormData({ ...formData, game: e.target.value })}
                                     >
-                                        <option value="Free Fire">Free Fire</option>
+                                        {gamesList.map(game => (
+                                            <option key={game} value={game}>{game}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div>

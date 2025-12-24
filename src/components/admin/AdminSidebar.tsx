@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { Users, Trophy, LogOut, ArrowLeft, Menu } from "lucide-react";
+import { Users, Trophy, LogOut, ArrowLeft, Menu, Gamepad2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -12,54 +12,15 @@ import { useRouter, usePathname } from "next/navigation";
 export default function AdminSidebar() {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const navRef = useRef<HTMLDivElement>(null);
-    const { user, isAdmin } = useAuth(); // isAdmin is available if needed, but layout handles protection
+    const { user, isAdmin } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
 
-    // Sidebar entrance animation
-    useEffect(() => {
-        gsap.fromTo(
-            sidebarRef.current,
-            { x: -20, opacity: 0 },
-            { x: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
-        );
-
-        // Stagger nav items
-        if (navRef.current) {
-            gsap.fromTo(
-                navRef.current.children,
-                { x: -10, opacity: 0 },
-                { x: 0, opacity: 1, duration: 0.3, stagger: 0.1, ease: "power2.out", delay: 0.2 }
-            );
-        }
-    }, []);
-
-    // Profile menu animation
-    useEffect(() => {
-        if (isProfileMenuOpen) {
-            gsap.fromTo(
-                ".admin-profile-menu",
-                { opacity: 0, y: 8, scale: 0.95 },
-                { opacity: 1, y: 0, scale: 1, duration: 0.2, ease: "power2.out" }
-            );
-        }
-    }, [isProfileMenuOpen]);
-
-    // Click outside handler
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-                setIsProfileMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
     const menuItems = [
         { id: "tournaments", label: "Tournaments", icon: Trophy, path: "/admin/tournaments" },
+        { id: "games", label: "Games", icon: Gamepad2, path: "/admin/games" },
         { id: "users", label: "Users", icon: Users, path: "/admin/users" },
     ];
 
