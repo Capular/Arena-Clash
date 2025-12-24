@@ -59,8 +59,8 @@ export default function DashboardHeader() {
     const isTournaments = pathname === "/" || pathname.includes("tournaments");
 
     return (
-        <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 flex flex-col">
-            <div className="h-16 lg:h-20 flex items-center justify-end px-4 lg:px-8 gap-4">
+        <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl flex flex-col">
+            <div className="h-16 lg:h-20 flex items-center px-4 lg:px-8 gap-4">
                 {/* Desktop Game Selection */}
                 {isTournaments && (
                     <div className="hidden lg:block w-[180px]">
@@ -84,7 +84,7 @@ export default function DashboardHeader() {
                 )}
 
                 {/* Notification Bell */}
-                <div className="relative group">
+                <div className="relative group ml-auto">
                     {unreadCount > 0 && (
                         <div className="w-5 h-5 rounded-full bg-red-500 absolute -top-1 -right-1 animate-pulse z-10 flex items-center justify-center text-[10px] font-bold text-white border-2 border-background">
                             {unreadCount}
