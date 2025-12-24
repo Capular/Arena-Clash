@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import PaymentModal from "@/components/payment/PaymentModal";
 import { useSearchParams, useRouter } from "next/navigation";
+import gsap from "gsap";
 
 interface Transaction {
     id: string;
@@ -27,6 +28,11 @@ export default function WalletView() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const processedRef = useRef(false);
+
+    // Refs for GSAP animations
+    const balanceCardRef = useRef(null);
+    const statsCardsRef = useRef(null);
+    const transactionsRef = useRef(null);
 
     useEffect(() => {
         if (!user) return;
@@ -81,16 +87,37 @@ export default function WalletView() {
         };
     }, [user]);
 
+    // GSAP entrance animations
+    useEffect(() => {
+        const ctx = gsap.context(() => {
+            gsap.fromTo(
+                balanceCardRef.current,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
+            );
+
+            gsap.fromTo(
+                statsCardsRef.current,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.6, delay: 0.1, ease: "power2.out" }
+            );
+
+            gsap.fromTo(
+                transactionsRef.current,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.6, delay: 0.2, ease: "power2.out" }
+            );
+        });
+
+        return () => ctx.revert();
+    }, []);
+
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
     const log = (msg: string) => setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
 
     const manuallyCheck = async (tx: Transaction) => {
         if (!tx.id || !user) return;
-        const oid = (tx as any).gatewayOrderId; // Assuming we add this to local state (need to ensure it's in query)
-
-        // If gatewayOrderId isn't in the type, we might need to fetch it or rely on it being there. 
-        // We added it to the push logic in useEffect, so let's ensure it's there.
-        // Actually, the Transaction interface doesn't have gatewayOrderId. Let's adding it to interface first or casting it.
+        const oid = (tx as any).gatewayOrderId;
 
         if (!oid) {
             console.log("Tx Data:", tx);
@@ -111,8 +138,6 @@ export default function WalletView() {
             const data = await res.json();
             console.log("Manual Check Data:", data);
 
-            // STRICT CHECK: The API response status="success" just means the API call worked. 
-            // We must check the INNER order status.
             const rawStatus = data.data?.status || data.result?.status;
             const innerStatus = String(rawStatus || '').trim().toLowerCase();
 
@@ -125,7 +150,6 @@ export default function WalletView() {
 
                 if (isNaN(amount) || amount <= 0) amount = Number(tx.amount) || 100;
 
-                // Ensure strict number for increment
                 const finalAmount = Number(amount);
 
                 await updateDoc(doc(db, "transactions", tx.id), {
@@ -135,7 +159,6 @@ export default function WalletView() {
                     gatewayRef: data.upi_txn_id || "Manual Check"
                 });
 
-                // Use setDoc with merge to ensure user doc exists
                 await setDoc(doc(db, "users", user.uid), {
                     walletBalance: increment(finalAmount)
                 }, { merge: true });
@@ -174,7 +197,6 @@ export default function WalletView() {
                     log(`API Response: ${JSON.stringify(data)}`);
 
                     if (data.status === 'success' || (data.data && data.data.status === 'success')) {
-                        // Check for existing tx
                         const txQuery = query(collection(db, "transactions"), where("gatewayOrderId", "==", oid));
                         const txSnap = await getDocs(txQuery);
 
@@ -182,7 +204,6 @@ export default function WalletView() {
                             const txDoc = txSnap.docs[0];
                             const txData = txDoc.data();
 
-                            // Only update if not already success
                             if (txData.status !== 'success') {
                                 let amount = 100;
                                 if (data.amount) amount = parseFloat(String(data.amount));
@@ -195,11 +216,10 @@ export default function WalletView() {
                                 await updateDoc(doc(db, "transactions", txDoc.id), {
                                     status: 'success',
                                     description: "Wallet Recharge",
-                                    amount: amount, // confirm amount from gateway
+                                    amount: amount,
                                     gatewayRef: data.upi_txn_id || "N/A"
                                 });
 
-                                // Use setDoc with merge to ensure user doc exists
                                 await setDoc(doc(db, "users", user.uid), {
                                     walletBalance: increment(amount)
                                 }, { merge: true });
@@ -213,13 +233,11 @@ export default function WalletView() {
                                 router.replace('/');
                             }
                         } else {
-                            // Fallback: If pending doc wasn't found (rare), create new
                             log("No pending doc found, creating new.");
                             let amount = 100;
                             if (data.amount) amount = parseFloat(String(data.amount));
                             else if (data.data?.amount) amount = parseFloat(String(data.data.amount));
 
-                            // Check for NaN
                             if (isNaN(amount) || amount <= 0) amount = 100;
 
                             await addDoc(collection(db, "transactions"), {
@@ -233,7 +251,6 @@ export default function WalletView() {
                                 gatewayRef: data.upi_txn_id || "N/A"
                             });
 
-                            // Use setDoc with merge to ensure user doc exists
                             await setDoc(doc(db, "users", user.uid), {
                                 walletBalance: increment(amount)
                             }, { merge: true });
@@ -280,15 +297,15 @@ export default function WalletView() {
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
+        <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Premium Balance Card */}
-                <div className="card-premium p-8 relative overflow-hidden group">
-                    {/* Animated gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
+                <div ref={balanceCardRef} className="card-premium p-8 relative overflow-hidden group opacity-0">
+                    {/* Subtle gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-100" />
 
-                    {/* Shine effect */}
-                    <div className="card-shine" />
+                    {/* Glass shine effect */}
+                    <div className="glass-shine" />
 
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-2">
@@ -305,28 +322,29 @@ export default function WalletView() {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setIsPaymentModalOpen(true)}
-                                className="flex-1 btn-premium flex items-center justify-center gap-2 group/btn text-sm py-2.5"
+                                className="flex-1 btn-premium flex items-center justify-center gap-2 text-sm py-2.5"
                             >
-                                <ArrowDownLeft className="w-4 h-4 transition-transform group-hover/btn:rotate-12" />
+                                <ArrowDownLeft className="w-4 h-4" />
                                 Add Funds
                             </button>
-                            <button className="flex-1 glass-effect py-2.5 rounded-lg font-bold font-rajdhani text-sm transition-all hover:scale-105 hover:shadow-lg border border-primary/20 hover:border-primary/40 flex items-center justify-center gap-2 group/btn">
-                                <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:-rotate-12" />
+                            <button className="flex-1 glass-effect py-2.5 rounded-lg font-bold font-rajdhani text-sm transition-all border border-primary/20 hover:border-primary/30 flex items-center justify-center gap-2">
+                                <ArrowUpRight className="w-4 h-4" />
                                 Withdraw
                             </button>
                         </div>
                     </div>
 
                     {/* Decorative glow */}
-                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/20 blur-[100px] rounded-full animate-pulse-glow" />
+                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/10 blur-[100px] rounded-full" />
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 gap-4">
+                <div ref={statsCardsRef} className="grid grid-cols-2 gap-4 opacity-0">
                     {/* Winnings Card */}
-                    <div className="card-premium p-5 flex flex-col justify-between group hover:border-green-500/30 transition-all">
-                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mb-3 border border-green-500/20 transition-transform group-hover:scale-110 duration-300">
-                            <ArrowDownLeft size={20} className="transition-transform group-hover:rotate-12" />
+                    <div className="card-premium p-5 flex flex-col justify-between group hover:border-green-500/20 transition-all relative overflow-hidden">
+                        <div className="glass-shine" />
+                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mb-3 border border-green-500/20">
+                            <ArrowDownLeft size={20} />
                         </div>
                         <div>
                             <p className="text-muted-foreground text-xs font-medium mb-1">Total Winnings</p>
@@ -335,9 +353,10 @@ export default function WalletView() {
                     </div>
 
                     {/* Spent Card */}
-                    <div className="card-premium p-5 flex flex-col justify-between group hover:border-primary/30 transition-all">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3 border border-primary/20 transition-transform group-hover:scale-110 duration-300">
-                            <ArrowUpRight size={20} className="transition-transform group-hover:-rotate-12" />
+                    <div className="card-premium p-5 flex flex-col justify-between group hover:border-primary/20 transition-all relative overflow-hidden">
+                        <div className="glass-shine" />
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3 border border-primary/20">
+                            <ArrowUpRight size={20} />
                         </div>
                         <div>
                             <p className="text-muted-foreground text-xs font-medium mb-1">Total Spent</p>
@@ -348,7 +367,8 @@ export default function WalletView() {
             </div>
 
             {/* Premium Transactions Section */}
-            <div className="card-premium p-6">
+            <div ref={transactionsRef} className="card-premium p-6 opacity-0 relative overflow-hidden">
+                <div className="glass-shine" />
                 <div className="flex items-center justify-between mb-5">
                     <h3 className="font-rajdhani font-bold text-xl text-foreground flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
@@ -371,25 +391,23 @@ export default function WalletView() {
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {transactions.map((tx, index) => (
+                        {transactions.map((tx) => (
                             <div
                                 key={tx.id}
-                                className="flex items-center justify-between p-3.5 rounded-xl glass-effect hover:bg-primary/5 transition-all duration-300 border border-border/50 hover:border-primary/30 group"
-                                style={{
-                                    animationDelay: `${index * 50}ms`,
-                                    animation: 'fadeInSlide 0.4s ease-out forwards',
-                                }}
+                                className="flex items-center justify-between p-3.5 rounded-xl glass-effect hover:bg-primary/[0.02] transition-all duration-300 border border-border/50 hover:border-primary/20 group relative overflow-hidden"
                             >
-                                <div className="flex items-center gap-3">
-                                    {/* Status Icon */}
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${tx.status === 'pending'
+                                {/* Subtle glass shine on hover */}
+                                <div className="glass-shine" />
+
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${tx.status === 'pending'
                                             ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
                                             : tx.status === 'failed'
                                                 ? 'bg-red-500/10 text-red-500 border border-red-500/30'
                                                 : (tx.type === 'prize' || tx.type === 'deposit'
                                                     ? 'bg-green-500/10 text-green-500 border border-green-500/30'
                                                     : 'bg-primary/10 text-primary border border-primary/30')
-                                        } group-hover:scale-110`}>
+                                        }`}>
                                         {tx.status === 'pending'
                                             ? <Loader2 size={18} className="animate-spin" />
                                             : (tx.type === 'prize' || tx.type === 'deposit'
@@ -420,11 +438,11 @@ export default function WalletView() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2.5">
+                                <div className="flex items-center gap-2.5 relative z-10">
                                     {tx.status === 'pending' && (
                                         <button
                                             onClick={() => manuallyCheck(tx)}
-                                            className="text-[11px] bg-primary/20 text-primary hover:bg-primary/30 px-2.5 py-1.5 rounded-lg transition-all font-bold hover:scale-105"
+                                            className="text-[11px] bg-primary/20 text-primary hover:bg-primary/30 px-2.5 py-1.5 rounded-lg transition-all font-bold"
                                         >
                                             Check
                                         </button>
@@ -443,7 +461,6 @@ export default function WalletView() {
                     </div>
                 )}
             </div>
-
 
             <PaymentModal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} uid={user.uid} />
         </div>
