@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Gamepad2, Wallet, Settings, Menu, User, LogOut, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dispatch, SetStateAction } from "react";
@@ -12,15 +12,14 @@ import { auth } from "@/lib/firebase";
 import LoginModal from "@/components/auth/LoginModal";
 
 interface SidebarProps {
-    activeTab: string;
-    setActiveTab: Dispatch<SetStateAction<string>>;
     onLoginClick: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: SidebarProps) {
+export default function Sidebar({ onLoginClick }: SidebarProps) {
     const sidebarRef = useRef(null);
     const { user, loading } = useAuth();
-    // Removed local isLoginOpen
+    const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         gsap.fromTo(
@@ -31,15 +30,21 @@ export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: Sideb
     }, []);
 
     const menuItems = [
-        { id: "tournaments", label: "Tournaments", icon: Gamepad2 },
-        { id: "my-registrations", label: "My Registrations", icon: ClipboardList },
-        { id: "wallet", label: "Wallet", icon: Wallet },
+        { id: "tournaments", label: "Tournaments", icon: Gamepad2, path: "/tournaments" },
+        { id: "my-registrations", label: "My Registrations", icon: ClipboardList, path: "/registrations" },
+        { id: "wallet", label: "Wallet", icon: Wallet, path: "/wallet" },
     ];
+
+    const isActive = (path: string) => {
+        if (path === "/tournaments" && (pathname === "/" || pathname === "/tournaments")) return true;
+        return pathname.startsWith(path);
+    };
 
     const handleLogout = async (e: React.MouseEvent) => {
         e.stopPropagation();
         try {
             await signOut(auth);
+            router.push("/");
         } catch (error) {
             console.error("Logout error", error);
         }
@@ -61,10 +66,10 @@ export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: Sideb
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => setActiveTab(item.id)}
+                            onClick={() => router.push(item.path)}
                             className={cn(
                                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative overflow-hidden",
-                                activeTab === item.id
+                                isActive(item.path)
                                     ? "bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:bg-white/5 hover:text-white"
                             )}
@@ -73,7 +78,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: Sideb
                             <span className="hidden lg:block font-medium z-10 font-rajdhani text-sm">
                                 {item.label}
                             </span>
-                            {activeTab === item.id && (
+                            {isActive(item.path) && (
                                 <div className="absolute inset-0 bg-primary/10 border-r-2 border-primary" />
                             )}
                         </button>
@@ -84,7 +89,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: Sideb
             <div className="px-3 py-3 border-t border-border/50 flex-shrink-0">
                 {!loading && user ? (
                     <div
-                        onClick={() => setActiveTab("settings")}
+                        onClick={() => router.push("/settings")}
                         className="flex items-center gap-2.5 px-2.5 py-2 bg-black/20 rounded-lg relative group cursor-pointer hover:bg-black/30 transition-colors"
                     >
                         <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden flex-shrink-0">
