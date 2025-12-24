@@ -14,12 +14,13 @@ import LoginModal from "@/components/auth/LoginModal";
 interface SidebarProps {
     activeTab: string;
     setActiveTab: Dispatch<SetStateAction<string>>;
+    onLoginClick: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, onLoginClick }: SidebarProps) {
     const sidebarRef = useRef(null);
     const { user, loading } = useAuth();
-    const [isLoginOpen, setIsLoginOpen] = useState(false);
+    // Removed local isLoginOpen
 
     useEffect(() => {
         gsap.fromTo(
@@ -35,7 +36,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         { id: "wallet", label: "Wallet", icon: Wallet },
     ];
 
-    const handleLogout = async () => {
+    const handleLogout = async (e: React.MouseEvent) => {
+        e.stopPropagation();
         try {
             await signOut(auth);
         } catch (error) {
@@ -44,72 +46,67 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     };
 
     return (
-        <>
-            <aside
-                ref={sidebarRef}
-                className="hidden lg:flex w-64 h-screen border-r border-border bg-card/50 backdrop-blur-xl flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
-            >
-                <div>
-                    <div className="h-20 flex items-center justify-center border-b border-border/50">
-                        <h1 className="font-rajdhani font-bold text-2xl text-primary tracking-wider uppercase">
-                            Arena Clash
-                        </h1>
-                    </div>
-
-                    <nav className="p-4 space-y-2">
-                        {menuItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveTab(item.id)}
-                                className={cn(
-                                    "w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
-                                    activeTab === item.id
-                                        ? "bg-primary/10 text-primary"
-                                        : "text-muted-foreground hover:bg-white/5 hover:text-white"
-                                )}
-                            >
-                                <item.icon className="h-5 w-5 z-10" />
-                                <span className="hidden lg:block font-medium z-10 font-rajdhani text-lg">
-                                    {item.label}
-                                </span>
-                                {activeTab === item.id && (
-                                    <div className="absolute inset-0 bg-primary/10 border-r-2 border-primary" />
-                                )}
-                            </button>
-                        ))}
-                    </nav>
+        <aside
+            ref={sidebarRef}
+            className="hidden lg:flex w-64 h-screen border-r border-border bg-card/50 backdrop-blur-xl flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
+        >
+            <div>
+                <div className="h-20 flex items-center justify-center border-b border-border/50">
+                    <h1 className="font-rajdhani font-bold text-2xl text-primary tracking-wider uppercase">
+                        Arena Clash
+                    </h1>
                 </div>
 
-                <div className="p-4 border-t border-border/50">
-                    <button className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 text-muted-foreground hover:text-white transition-colors">
-                        <Settings className="h-5 w-5" />
-                        <span className="hidden lg:block font-medium font-rajdhani">Settings</span>
-                    </button>
-
-                    {!loading && user ? (
-                        <div className="mt-4 flex items-center gap-3 px-3 py-2 bg-black/20 rounded-lg relative group cursor-pointer">
-                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden">
-                                {user.photoURL ? <img src={user.photoURL} alt="User" className="h-full w-full object-cover" /> : <User size={16} />}
-                            </div>
-                            <div className="hidden lg:block flex-1 overflow-hidden">
-                                <p className="text-sm font-bold text-white leading-none truncate">{user.displayName || "Gamer"}</p>
-                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                            </div>
-                            <button onClick={handleLogout} className="absolute right-2 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <LogOut size={16} />
-                            </button>
-                        </div>
-                    ) : (
+                <nav className="p-4 space-y-2">
+                    {menuItems.map((item) => (
                         <button
-                            onClick={() => setIsLoginOpen(true)}
-                            className="mt-4 w-full bg-primary text-white py-2 rounded-lg font-bold font-rajdhani hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={cn(
+                                "w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
+                                activeTab === item.id
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                            )}
                         >
-                            Login
+                            <item.icon className="h-5 w-5 z-10" />
+                            <span className="hidden lg:block font-medium z-10 font-rajdhani text-lg">
+                                {item.label}
+                            </span>
+                            {activeTab === item.id && (
+                                <div className="absolute inset-0 bg-primary/10 border-r-2 border-primary" />
+                            )}
                         </button>
-                    )}
-                </div>
-            </aside>
-            <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-        </>
+                    ))}
+                </nav>
+            </div>
+
+            <div className="p-4 border-t border-border/50">
+                {!loading && user ? (
+                    <div
+                        onClick={() => setActiveTab("settings")}
+                        className="mt-4 flex items-center gap-3 px-3 py-2 bg-black/20 rounded-lg relative group cursor-pointer hover:bg-black/30 transition-colors"
+                    >
+                        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden">
+                            {user.photoURL ? <img src={user.photoURL} alt="User" className="h-full w-full object-cover" /> : <User size={16} />}
+                        </div>
+                        <div className="hidden lg:block flex-1 overflow-hidden">
+                            <p className="text-sm font-bold text-white leading-none truncate">{user.displayName || "Gamer"}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                        <button onClick={handleLogout} className="absolute right-2 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <LogOut size={16} />
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        onClick={onLoginClick}
+                        className="mt-4 w-full bg-primary text-white py-2 rounded-lg font-bold font-rajdhani hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                    >
+                        Login
+                    </button>
+                )}
+            </div>
+        </aside>
     );
 }

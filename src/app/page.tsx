@@ -7,6 +7,7 @@ import WalletView from "@/components/dashboard/WalletView";
 import MyRegistrationsView from "@/components/dashboard/MyRegistrationsView";
 import SettingsView from "@/components/dashboard/SettingsView";
 import MobileNav from "@/components/dashboard/MobileNav";
+import LoginModal from "@/components/auth/LoginModal";
 import { ChevronDown, Bell } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { collection, query, where, orderBy, onSnapshot, limit } from "firebase/firestore";
@@ -18,6 +19,7 @@ const GAMES = ["All Games", "Free Fire", "PUBG", "COD: Mobile"];
 export default function Home() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   // Initialize from URL param or default
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "tournaments");
@@ -53,8 +55,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background pb-20 lg:pb-0">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLoginClick={() => setIsLoginOpen(true)} />
+      <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} onLoginClick={() => setIsLoginOpen(true)} user={user} />
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
       <div className="lg:pl-64 transition-all duration-300">
         {/* Header Area */}

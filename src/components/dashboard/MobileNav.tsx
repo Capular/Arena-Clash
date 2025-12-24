@@ -1,20 +1,20 @@
-"use client";
-
-import { Gamepad2, Wallet, Settings, ClipboardList } from "lucide-react";
+import { User } from "firebase/auth";
+import { Gamepad2, Wallet, ClipboardList, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dispatch, SetStateAction } from "react";
 
 interface MobileNavProps {
     activeTab: string;
     setActiveTab: Dispatch<SetStateAction<string>>;
+    onLoginClick: () => void;
+    user: User | null;
 }
 
-export default function MobileNav({ activeTab, setActiveTab }: MobileNavProps) {
+export default function MobileNav({ activeTab, setActiveTab, onLoginClick, user }: MobileNavProps) {
     const navItems = [
         { id: "tournaments", label: "Play", icon: Gamepad2 },
         { id: "my-registrations", label: "My Games", icon: ClipboardList },
         { id: "wallet", label: "Wallet", icon: Wallet },
-        { id: "settings", label: "Settings", icon: Settings },
     ];
 
     return (
@@ -35,6 +35,27 @@ export default function MobileNav({ activeTab, setActiveTab }: MobileNavProps) {
                     <span className="text-[10px] font-medium font-rajdhani">{item.label}</span>
                 </button>
             ))}
+
+            {/* Profile / Login Button */}
+            <button
+                onClick={() => user ? setActiveTab("settings") : onLoginClick()}
+                className={cn(
+                    "flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 relative",
+                    activeTab === "settings" ? "text-primary" : "text-muted-foreground hover:text-white"
+                )}
+            >
+                {activeTab === "settings" && (
+                    <div className="absolute top-0 w-8 h-1 bg-primary rounded-b-full shadow-[0_0_10px_hsl(var(--primary))]" />
+                )}
+                {user?.photoURL ? (
+                    <div className={`h-6 w-6 rounded-full overflow-hidden border ${activeTab === "settings" ? 'border-primary' : 'border-transparent'}`}>
+                        <img src={user.photoURL} alt="Profile" className="h-full w-full object-cover" />
+                    </div>
+                ) : (
+                    <UserIcon size={20} className={cn("transition-transform", activeTab === "settings" ? "scale-110" : "")} />
+                )}
+                <span className="text-[10px] font-medium font-rajdhani">{user ? "Profile" : "Login"}</span>
+            </button>
         </div>
     );
 }
