@@ -15,6 +15,7 @@ export default function MobileNav({ onLoginClick, user }: MobileNavProps) {
     const navItems = [
         { id: "tournaments", label: "Play", icon: Gamepad2, path: "/tournaments" },
         { id: "my-registrations", label: "My Games", icon: ClipboardList, path: "/registrations" },
+        { id: "wallet", label: "Wallet", icon: Wallet, path: "/wallet" },
     ];
 
     const isActive = (path: string) => {
