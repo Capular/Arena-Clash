@@ -19,7 +19,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
             <div className="flex-1 lg:pl-52 transition-all duration-300">
                 <DashboardHeader />
-                <main className="p-4 lg:p-8 max-w-[1600px] mx-auto pt-4">
+                <main className="p-4 lg:px-5 w-full max-w-full mx-auto pt-4">
                     {children}
                 </main>
             </div>
