@@ -394,13 +394,13 @@ export default function WalletView() {
                         {transactions.map((tx) => (
                             <div
                                 key={tx.id}
-                                className="flex items-center justify-between p-3.5 rounded-xl glass-effect hover:bg-primary/[0.02] transition-all duration-300 border border-border/50 hover:border-primary/20 group relative overflow-hidden"
+                                className="flex items-center justify-between p-3.5 rounded-xl bg-card/50 hover:bg-card/80 transition-all duration-300 border border-border/50 hover:border-primary/20 group relative overflow-hidden"
                             >
                                 {/* Subtle glass shine on hover */}
                                 <div className="glass-shine" />
 
                                 <div className="flex items-center gap-3 relative z-10">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${tx.status === 'pending'
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === 'pending'
                                             ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
                                             : tx.status === 'failed'
                                                 ? 'bg-red-500/10 text-red-500 border border-red-500/30'
