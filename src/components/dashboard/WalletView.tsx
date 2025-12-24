@@ -315,7 +315,7 @@ export default function WalletView() {
                         <p className="text-2xl font-bold text-white font-rajdhani">₹{stats.winnings.toFixed(2)}</p>
                     </div>
                     <div className="p-6 rounded-2xl bg-card border border-border flex flex-col justify-center hover:border-primary/30 transition-colors">
-                        <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 mb-4 border border-orange-500/20">
+                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white mb-4 border border-white/20">
                             <CreditCard size={24} />
                         </div>
                         <p className="text-muted-foreground text-sm font-medium">Recent Spent</p>
