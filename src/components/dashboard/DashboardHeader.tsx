@@ -14,7 +14,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-const GAMES = ["All Games", "Free Fire", "PUBG", "COD: Mobile"];
+const GAMES = ["Free Fire"];
 
 export default function DashboardHeader() {
     const { user } = useAuth();
@@ -27,15 +27,11 @@ export default function DashboardHeader() {
     const activeTab = pathname === "/" ? "tournaments" : pathname.split("/").pop();
 
     // Get game from URL or default
-    const selectedGame = searchParams.get("game") || "All Games";
+    const selectedGame = searchParams.get("game") || "Free Fire";
 
     const handleGameChange = (game: string) => {
         const params = new URLSearchParams(searchParams.toString());
-        if (game === "All Games") {
-            params.delete("game");
-        } else {
-            params.set("game", game);
-        }
+        params.set("game", game);
         router.push(`${pathname}?${params.toString()}`);
     };
 
