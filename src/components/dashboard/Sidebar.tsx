@@ -53,60 +53,86 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
     return (
         <aside
             ref={sidebarRef}
-            className="hidden lg:flex w-64 h-[100dvh] border-r border-border bg-card/50 backdrop-blur-xl flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
+            className="hidden lg:flex w-64 h-[100dvh] bg-background flex-col justify-between fixed left-0 top-0 z-50 transition-all duration-300"
         >
             <div className="flex flex-col flex-1 min-h-0">
-                <div className="h-16 flex-shrink-0 flex items-center justify-center border-b border-border/50">
-                    <h1 className="font-rajdhani font-bold text-xl text-primary tracking-wide uppercase">
+                {/* Logo Header - Minimal, No Border */}
+                <div className="h-14 flex-shrink-0 flex items-center px-4">
+                    <h1 className="font-rajdhani font-bold text-lg text-foreground tracking-wide">
                         Arena Clash
                     </h1>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 no-scrollbar">
+                {/* Navigation - Clean spacing */}
+                <nav className="flex-1 overflow-y-auto px-3 pt-2 space-y-1 custom-scrollbar">
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
                             onClick={() => router.push(item.path)}
                             className={cn(
-                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative overflow-hidden",
+                                "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium",
                                 isActive(item.path)
                                     ? "bg-primary/10 text-primary"
-                                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                             )}
                         >
-                            <item.icon className="h-[18px] w-[18px] z-10" />
-                            <span className="hidden lg:block font-medium z-10 font-rajdhani text-sm">
+                            <item.icon className="h-[18px] w-[18px]" />
+                            <span className="font-rajdhani">
                                 {item.label}
                             </span>
-                            {isActive(item.path) && (
-                                <div className="absolute inset-0 bg-primary/10 border-r-2 border-primary" />
-                            )}
                         </button>
                     ))}
                 </nav>
             </div>
 
-            <div className="px-3 py-3 border-t border-border/50 flex-shrink-0">
+            {/* Bottom Section - Clean, Minimal */}
+            <div className="px-3 pb-4 flex-shrink-0">
                 {!loading && user ? (
-                    <div
-                        onClick={() => router.push("/settings")}
-                        className="flex items-center gap-2.5 px-2.5 py-2 bg-black/20 rounded-lg relative group cursor-pointer hover:bg-black/30 transition-colors"
-                    >
-                        <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden flex-shrink-0">
-                            {user.photoURL ? <img src={user.photoURL} alt="User" className="h-full w-full object-cover" /> : <User size={14} />}
-                        </div>
-                        <div className="hidden lg:block flex-1 overflow-hidden min-w-0">
-                            <p className="text-xs font-semibold text-white leading-tight truncate">{user.displayName || "Gamer"}</p>
-                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user.email}</p>
-                        </div>
-                        <button onClick={handleLogout} className="absolute right-1.5 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <LogOut size={14} />
+                    <div className="space-y-2">
+                        {/* Settings Button - Subtle */}
+                        <button
+                            onClick={() => router.push("/settings")}
+                            className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium",
+                                pathname === "/settings"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            )}
+                        >
+                            <Settings className="h-[18px] w-[18px]" />
+                            <span className="font-rajdhani">Settings</span>
                         </button>
+
+                        {/* User Profile Card */}
+                        <div className="flex items-center gap-2.5 px-3 py-2.5 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
+                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden flex-shrink-0">
+                                {user.photoURL ? (
+                                    <img src={user.photoURL} alt="User" className="h-full w-full object-cover" />
+                                ) : (
+                                    <User size={16} />
+                                )}
+                            </div>
+                            <div className="flex-1 overflow-hidden min-w-0">
+                                <p className="text-xs font-semibold text-foreground leading-tight truncate">
+                                    {user.displayName || "Gamer"}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                    {user.email}
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                title="Logout"
+                            >
+                                <LogOut size={14} />
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <button
                         onClick={onLoginClick}
-                        className="w-full bg-primary text-black py-2.5 rounded-lg font-bold font-rajdhani text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                        className="w-full btn-premium text-sm py-2.5 rounded-lg font-rajdhani"
                     >
                         Login
                     </button>
