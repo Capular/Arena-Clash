@@ -444,6 +444,7 @@ export default function WalletView() {
                 )}
             </div>
 
+
             <PaymentModal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} uid={user.uid} />
         </div>
     );
