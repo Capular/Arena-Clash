@@ -40,8 +40,34 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
         return pathname.startsWith(path);
     };
 
-    const handleLogout = async (e: React.MouseEvent) => {
-        e.stopPropagation();
+
+    // Click outside handler for profile menu
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+                setIsProfileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Animation for dropdown
+    useEffect(() => {
+        if (isProfileMenuOpen) {
+            gsap.fromTo(
+                document.querySelector(".profile-menu"),
+                { opacity: 0, y: 10, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.2, ease: "power2.out" }
+            );
+        }
+    }, [isProfileMenuOpen]);
+
+    const handleLogout = async () => {
         try {
             await signOut(auth);
             router.push("/");
@@ -86,26 +112,42 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
             </div>
 
             {/* Bottom Section - Clean, Minimal */}
-            <div className="px-3 pb-4 flex-shrink-0">
+            <div className="px-3 pb-4 flex-shrink-0 relative" ref={profileRef}>
                 {!loading && user ? (
-                    <div className="space-y-2">
-                        {/* Settings Button - Subtle */}
-                        <button
-                            onClick={() => router.push("/settings")}
+                    <>
+                        {/* Profile Dropdown Menu */}
+                        {isProfileMenuOpen && (
+                            <div className="profile-menu absolute bottom-full left-3 right-3 mb-2 bg-popover/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl overflow-hidden py-1.5 z-50 ring-1 ring-white/5">
+                                <button
+                                    onClick={() => {
+                                        router.push("/settings");
+                                        setIsProfileMenuOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 flex items-center gap-2.5 font-medium transition-colors"
+                                >
+                                    <Settings className="h-4 w-4 text-muted-foreground" />
+                                    Settings
+                                </button>
+                                <div className="h-px bg-border/40 my-1 mx-2" />
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-500 flex items-center gap-2.5 font-medium transition-colors"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    Log Out
+                                </button>
+                            </div>
+                        )}
+
+                        {/* User Profile Card - Clickable Trigger */}
+                        <div
+                            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                             className={cn(
-                                "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium",
-                                pathname === "/settings"
-                                    ? "bg-primary/10 text-primary"
-                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                "flex items-center gap-2.5 px-3 py-2.5 bg-muted/30 rounded-lg hover:bg-muted/50 transition-all cursor-pointer group select-none",
+                                isProfileMenuOpen ? "bg-muted/60 ring-1 ring-primary/20" : ""
                             )}
                         >
-                            <Settings className="h-[18px] w-[18px]" />
-                            <span className="font-rajdhani">Settings</span>
-                        </button>
-
-                        {/* User Profile Card */}
-                        <div className="flex items-center gap-2.5 px-3 py-2.5 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
-                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden flex-shrink-0">
+                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-primary/10 transition-all">
                                 {user.photoURL ? (
                                     <img src={user.photoURL} alt="User" className="h-full w-full object-cover" />
                                 ) : (
@@ -120,15 +162,14 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
                                     {user.email}
                                 </p>
                             </div>
-                            <button
-                                onClick={handleLogout}
-                                className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                                title="Logout"
-                            >
-                                <LogOut size={14} />
-                            </button>
+                            <div className={cn(
+                                "text-muted-foreground transition-transform duration-300",
+                                isProfileMenuOpen ? "rotate-180" : ""
+                            )}>
+                                <Menu size={14} className="opacity-50" />
+                            </div>
                         </div>
-                    </div>
+                    </>
                 ) : (
                     <button
                         onClick={onLoginClick}

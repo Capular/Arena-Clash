@@ -4,52 +4,63 @@
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --background: #09090B;
-    /* main page */
-    --card: #09090B;
-    --card-foreground: #FAFAFA;
-    --popover: #09090B;
-    --popover-foreground: #FAFAFA;
+    /* Premium Dark Theme */
 
-    /* Secondary surfaces */
-    --secondary: #18181B;
-    /* sidebar, panels */
-    --secondary-foreground: #FAFAFA;
-    --muted: #18181B;
-    --muted-foreground: #A1A1AA;
-    /* secondary text */
+    /* Background: Deep Black/Charcoal */
+    --background: 240 10% 3.9%;
 
-    /* Accent (NO GREEN) */
-    --accent: #18181B;
-    --accent-foreground: #FAFAFA;
+    /* Foreground: White/Off-white */
+    --foreground: 0 0% 98%;
 
-    /* Primary (buttons, focus) */
-    --primary: #FAFAFA;
-    --primary-foreground: #09090B;
+    /* Card: Dark Grey Surface */
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
 
-    /* Borders and Inputs */
-    --border: #27272A;
-    /* dividers */
-    --input: #27272A;
-    --ring: #FAFAFA;
+    /* Popover */
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
 
-    /* Text */
-    --foreground: #FAFAFA;
-    /* primary text */
+    /* Primary: Light Gray (Monochrome Accent) */
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    /* Dark text on light background */
+
+    /* Secondary: Muted Grey */
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    /* Muted: Subtle Text */
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    /* Accent: Interactive elements */
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
 
     /* Destructive */
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: #FAFAFA;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders and Inputs */
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+
+    /* Ring: Focus state (Light Gray) */
+    --ring: 0 0% 98%;
 
     --radius: 0.6rem;
 
     /* Charts (Monochrome Scale) */
-    --chart-1: #FAFAFA;
-    --chart-2: #D4D4D8;
-    --chart-3: #A1A1AA;
-    --chart-4: #71717A;
-    --chart-5: #52525B;
+    --chart-1: 0 0% 98%;
+    /* White */
+    --chart-2: 0 0% 80%;
+    /* Light Grey */
+    --chart-3: 0 0% 60%;
+    /* Medium Grey */
+    --chart-4: 0 0% 40%;
+    /* Dark Grey */
+    --chart-5: 0 0% 20%;
+    /* Very Dark Grey */
   }
 
   /* Dark mode inherits from :root - no overrides needed for monochrome theme */
