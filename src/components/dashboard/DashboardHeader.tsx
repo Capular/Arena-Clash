@@ -27,7 +27,7 @@ export default function DashboardHeader() {
     const activeTab = pathname === "/" ? "tournaments" : pathname.split("/").pop();
 
     // Get game from URL
-    const selectedGame = searchParams.get("game");
+    const selectedGame = searchParams.get("game") || undefined;
 
     // Default to favorite game if available and no game selected
     useEffect(() => {
