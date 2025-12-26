@@ -8,6 +8,7 @@ import gsap from "gsap";
 import GsapLoader from "@/components/ui/GsapLoader";
 import { Swords, Trophy, MapPin, ArrowLeft, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import GamemodeCard from "./GamemodeCard";
 
 interface Tournament {
     id: string;
@@ -189,16 +190,11 @@ export default function TournamentsView({ selectedGame }: TournamentsViewProps) 
                                         {gamemodes.length > 0 ? (
                                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                 {gamemodes.map((mode, idx) => (
-                                                    <button
+                                                    <GamemodeCard
                                                         key={idx}
+                                                        mode={mode}
                                                         onClick={() => setSelectedGamemode(mode)}
-                                                        className="group bg-card hover:bg-primary/5 border border-border/50 hover:border-primary/50 text-left p-4 rounded-xl transition-all"
-                                                    >
-                                                        <span className="block text-lg font-bold text-foreground font-rajdhani group-hover:text-primary transition-colors">{mode}</span>
-                                                        <span className="text-xs text-muted-foreground mt-1 flex items-center gap-1 group-hover:text-primary/70">
-                                                            View Scrims <Swords size={12} />
-                                                        </span>
-                                                    </button>
+                                                    />
                                                 ))}
                                             </div>
                                         ) : (
