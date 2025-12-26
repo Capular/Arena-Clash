@@ -1,5 +1,6 @@
 import { Rajdhani } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 
 const rajdhani = Rajdhani({
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={`${rajdhani.variable} font-sans bg-background text-foreground`}>
         <AuthProvider>
           {children}
+          <Toaster position="top-center" richColors />
         </AuthProvider>
       </body>
     </html>

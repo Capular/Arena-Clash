@@ -16,7 +16,8 @@ export async function POST(request: Request) {
         payload.append('amount', amount);
         payload.append('order_id', orderId);
         payload.append('customer_mobile', customerMobile || "9999999999");
-        payload.append('redirect_url', `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/?tab=wallet&status=check&oid=${orderId}`);
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        payload.append('redirect_url', `${appUrl}/payment/processing/${orderId}?status=check`);
         payload.append('remark', 'Wallet Topup');
 
         const response = await fetch("https://zapupi.com/api/create-order", {

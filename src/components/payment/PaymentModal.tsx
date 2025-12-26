@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { X, ShieldCheck } from "lucide-react";
 import gsap from "gsap";
 
@@ -15,6 +16,7 @@ interface PaymentModalProps {
 }
 
 export default function PaymentModal({ isOpen, onClose, uid }: PaymentModalProps) {
+    const router = useRouter();
     const [amount, setAmount] = useState("100");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -84,8 +86,8 @@ export default function PaymentModal({ isOpen, onClose, uid }: PaymentModalProps
             const paymentUrl = data.result?.payment_url || data.payment_url || data.data?.payment_url;
 
             if ((data.status === 'success' || data.status === true) && paymentUrl) {
-                // Redirect user to payment page
-                window.location.href = paymentUrl;
+                // Redirect to processing page
+                router.push(`/payment/processing/${orderId}?url=${encodeURIComponent(paymentUrl)}`);
             } else {
                 // Show detailed error
                 const msg = data.error || data.message || "Failed to initiate payment";
