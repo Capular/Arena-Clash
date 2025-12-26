@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle, AlertCircle, ArrowRight, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,10 @@ import gsap from "gsap";
 import { toast } from "sonner";
 
 // This page handles both the "intermediate" state (before paying) and "verifying" state (after paying)
-export default function PaymentProcessingPage({ params }: { params: { txnId: string } }) {
+export default function PaymentProcessingPage({ params }: { params: Promise<{ txnId: string }> }) {
+    const { txnId } = use(params);
     const router = useRouter();
     const searchParams = useSearchParams();
-    const txnId = params.txnId;
     const paymentUrl = searchParams.get("url");
     const isReturning = searchParams.get("status") === "check"; // Flag from ZapUPI redirect
 
@@ -46,16 +46,24 @@ export default function PaymentProcessingPage({ params }: { params: { txnId: str
     }, [txnId, router]);
 
     // 2. If returning from gateway, trigger a status check
+    // 2. If returning from gateway, trigger a status check immediately
     useEffect(() => {
-        if (isReturning) {
+        if (isReturning && status === 'pending') {
             setVerifying(true);
-            // Call your status check API if needed, or rely on webhook/realtime listeners.
-            // For now, we rely on the Firestore listener above, assuming Webhook updates it.
-            // But we can also force a check:
-            fetch(`/api/payment/status?orderId=${txnId}`, { method: 'POST' })
-                .catch(console.error);
+
+            const checkStatus = async () => {
+                try {
+                    console.log("Auto-verifying transaction:", txnId);
+                    await fetch(`/api/payment/status?orderId=${txnId}`, { method: 'POST' });
+                } catch (err) {
+                    console.error("Auto-verification failed:", err);
+                    // Optional: Retry logic could go here, but onSnapshot should catch it if the backend updates independently
+                }
+            };
+
+            checkStatus();
         }
-    }, [isReturning, txnId]);
+    }, [isReturning, txnId, status]);
 
     // Animations
     useEffect(() => {

@@ -18,6 +18,7 @@ interface Transaction {
     description: string;
     status?: 'pending' | 'success' | 'failed';
     orderId?: string;
+    gatewayOrderId?: string;
     paymentMethod?: string;
     tournamentId?: string;
 }
@@ -359,14 +360,27 @@ function TransactionDetailDialog({ transaction, onClose, getTransactionStyle }: 
 
                         {/* Detail Rows */}
                         <div ref={detailRowsRef} className="space-y-3">
-                            {/* Transaction ID */}
+                            {/* Transaction ID (Gateway Order ID preferred) */}
                             <div className="flex items-start gap-3 p-3 bg-muted/10 rounded-lg">
                                 <Hash className="w-4 h-4 text-muted-foreground mt-0.5" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs text-muted-foreground">Transaction ID</p>
-                                    <p className="text-sm font-medium text-foreground font-mono truncate">{transaction.id}</p>
+                                    <p className="text-sm font-medium text-foreground font-mono truncate">
+                                        {transaction.gatewayOrderId || transaction.orderId || transaction.id}
+                                    </p>
                                 </div>
                             </div>
+
+                            {/* Internal Reference ID (if showing Order ID above) */}
+                            {(transaction.gatewayOrderId || transaction.orderId) && (
+                                <div className="flex items-start gap-3 p-3 bg-muted/10 rounded-lg">
+                                    <FileText className="w-4 h-4 text-muted-foreground mt-0.5" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs text-muted-foreground">Reference ID</p>
+                                        <p className="text-sm font-medium text-muted-foreground font-mono truncate text-[10px]">{transaction.id}</p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Date & Time */}
                             <div className="flex items-start gap-3 p-3 bg-muted/10 rounded-lg">
@@ -483,6 +497,8 @@ export default function WalletView() {
                     timestamp: data.timestamp,
                     description: data.description,
                     status: data.status,
+                    gatewayOrderId: data.gatewayOrderId,
+                    orderId: data.orderId,
                 });
 
                 // Only count successful transactions for stats
