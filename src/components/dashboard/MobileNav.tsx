@@ -2,6 +2,7 @@ import { User } from "firebase/auth";
 import { Gamepad2, Wallet, ClipboardList, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MobileNavProps {
     onLoginClick: () => void;
@@ -53,13 +54,12 @@ export default function MobileNav({ onLoginClick, user }: MobileNavProps) {
                 {pathname === "/settings" && (
                     <div className="absolute top-0 w-8 h-1 bg-primary rounded-b-full shadow-[0_0_10px_hsl(var(--primary))]" />
                 )}
-                {user?.photoURL ? (
-                    <div className={`h-6 w-6 rounded-full overflow-hidden border ${pathname === "/settings" ? 'border-primary' : 'border-transparent'}`}>
-                        <img src={user.photoURL} alt="Profile" className="h-full w-full object-cover" />
-                    </div>
-                ) : (
-                    <UserIcon size={20} className={cn("transition-transform", pathname === "/settings" ? "scale-110" : "")} />
-                )}
+                <Avatar className={cn("h-6 w-6 transition-transform", pathname === "/settings" ? "ring-2 ring-primary scale-110" : "")}>
+                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || "User"} className="object-cover" />
+                    <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-bold">
+                        {user?.displayName ? user.displayName.charAt(0).toUpperCase() : <UserIcon size={12} />}
+                    </AvatarFallback>
+                </Avatar>
                 <span className="text-[10px] font-medium font-rajdhani">{user ? "Profile" : "Login"}</span>
             </button>
         </div>

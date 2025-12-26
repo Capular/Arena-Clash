@@ -10,6 +10,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import LoginModal from "@/components/auth/LoginModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface SidebarProps {
     onLoginClick: () => void;
@@ -162,12 +163,13 @@ export default function Sidebar({ onLoginClick }: SidebarProps) {
                                 isProfileMenuOpen ? "bg-muted/60 ring-1 ring-primary/20" : ""
                             )}
                         >
-                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-primary/10 transition-all">
-                                {user.photoURL ? (
-                                    <img src={user.photoURL} alt="User" className="h-full w-full object-cover" />
-                                ) : (
-                                    <User size={16} />
-                                )}
+                            <div className="h-8 w-8 flex-shrink-0 group-hover:ring-primary/10 transition-all">
+                                <Avatar className="h-8 w-8 ring-2 ring-transparent group-hover:ring-primary/10 transition-all">
+                                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} className="object-cover" />
+                                    <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                                        {user.displayName ? user.displayName.charAt(0).toUpperCase() : <User size={14} />}
+                                    </AvatarFallback>
+                                </Avatar>
                             </div>
                             <div className="flex-1 overflow-hidden min-w-0">
                                 <p className="text-xs font-semibold text-foreground leading-tight truncate">
