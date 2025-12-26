@@ -46,8 +46,8 @@ export default function AdminSidebar() {
     }, [isProfileMenuOpen]);
 
     const menuItems = [
-        { id: "tournaments", label: "Tournaments", icon: Trophy, path: "/admin/tournaments" },
         { id: "games", label: "Games", icon: Gamepad2, path: "/admin/games" },
+        { id: "tournaments", label: "Tournaments", icon: Trophy, path: "/admin/tournaments" },
         { id: "users", label: "Users", icon: Users, path: "/admin/users" },
     ];
 

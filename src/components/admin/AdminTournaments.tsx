@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Plus, Trash2, Gamepad2, X, Loader2 } from "lucide-react";
+import { Plus, Trash2, Gamepad2, X } from "lucide-react";
 import gsap from "gsap";
+import { GsapLoaderInline } from "@/components/ui/GsapLoader";
 
 interface Tournament {
     id: string;
@@ -21,6 +22,7 @@ interface Tournament {
     roomId?: string;
     roomPassword?: string;
     status: 'upcoming' | 'live' | 'completed';
+    type: 'scrim' | 'championship';
 }
 
 export default function AdminTournaments() {
@@ -41,7 +43,8 @@ export default function AdminTournaments() {
         time: '',
         maxPlayers: 100,
         roomId: '',
-        roomPassword: ''
+        roomPassword: '',
+        type: 'scrim' as 'scrim' | 'championship'
     });
 
     // Fetch games for dropdown
@@ -146,6 +149,9 @@ export default function AdminTournaments() {
                                 }`}>
                                 {t.status}
                             </span>
+                            <span className={`text-xs px-2 py-1 rounded font-medium border ${t.type === 'championship' ? 'border-yellow-500/50 text-yellow-500' : 'border-blue-500/50 text-blue-500'}`}>
+                                {t.type === 'championship' ? '🏆' : '⚔️'}
+                            </span>
                             <button onClick={() => handleDelete(t.id)} className="p-2 text-muted-foreground hover:text-red-500 transition-colors">
                                 <Trash2 size={16} />
                             </button>
@@ -182,6 +188,32 @@ export default function AdminTournaments() {
                                         placeholder="Tournament name"
                                         value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })}
                                     />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-muted-foreground block mb-1">Tournament Type</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, type: 'scrim' })}
+                                        className={`p-2 rounded-lg text-sm border transition-all ${formData.type === 'scrim'
+                                            ? 'bg-primary/20 border-primary text-primary font-bold'
+                                            : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted/50'
+                                            }`}
+                                    >
+                                        ⚔️ Scrim
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, type: 'championship' })}
+                                        className={`p-2 rounded-lg text-sm border transition-all ${formData.type === 'championship'
+                                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-500 font-bold'
+                                            : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted/50'
+                                            }`}
+                                    >
+                                        🏆 Championship
+                                    </button>
                                 </div>
                             </div>
 
@@ -247,7 +279,7 @@ export default function AdminTournaments() {
                             </div>
 
                             <button disabled={isLoading} type="submit" className="w-full bg-primary text-primary-foreground font-semibold py-2.5 rounded-lg hover:bg-primary/90 transition-colors text-sm">
-                                {isLoading ? <Loader2 className="animate-spin mx-auto w-4 h-4" /> : "Create Tournament"}
+                                {isLoading ? <GsapLoaderInline size="sm" className="mx-auto" /> : "Create Tournament"}
                             </button>
                         </form>
                     </div>

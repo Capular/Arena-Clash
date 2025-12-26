@@ -13,20 +13,30 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { GsapPulseBadge } from "@/components/ui/GsapPulse";
 
 export default function DashboardHeader() {
-    const { user } = useAuth();
+    const { user, userData } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [gamesList, setGamesList] = useState<string[]>(["Free Fire"]);
+    const [gamesList, setGamesList] = useState<string[]>([]);
 
     const activeTab = pathname === "/" ? "tournaments" : pathname.split("/").pop();
 
-    // Get game from URL or default
-    const selectedGame = searchParams.get("game") || "Free Fire";
+    // Get game from URL
+    const selectedGame = searchParams.get("game");
+
+    // Default to favorite game if available and no game selected
+    useEffect(() => {
+        if (!selectedGame && userData?.favoriteGame) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("game", userData.favoriteGame);
+            router.replace(`${pathname}?${params.toString()}`);
+        }
+    }, [selectedGame, userData, pathname, router, searchParams]);
 
     // Fetch active games
     useEffect(() => {
@@ -91,11 +101,7 @@ export default function DashboardHeader() {
 
                 {/* Notification Bell */}
                 <div className="relative group ml-auto">
-                    {unreadCount > 0 && (
-                        <div className="w-5 h-5 rounded-full bg-red-500 absolute -top-1 -right-1 animate-pulse z-10 flex items-center justify-center text-[10px] font-bold text-white border-2 border-background">
-                            {unreadCount}
-                        </div>
-                    )}
+                    <GsapPulseBadge count={unreadCount} />
                     <button className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-black/5 transition-colors relative shadow-sm">
                         <Bell size={20} className="text-foreground" />
                     </button>

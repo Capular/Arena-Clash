@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { User, Mail, Save, Loader2, Camera } from "lucide-react";
+import { User, Mail, Save, Camera } from "lucide-react";
 import { doc, updateDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import { db } from "@/lib/firebase";
+import gsap from "gsap";
+import { GsapLoaderInline } from "@/components/ui/GsapLoader";
 
 export default function SettingsView() {
     const { user } = useAuth();
     const [displayName, setDisplayName] = useState("");
     const [email, setEmail] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (user) {
@@ -19,6 +22,17 @@ export default function SettingsView() {
             setEmail(user.email || "");
         }
     }, [user]);
+
+    // GSAP entrance animation
+    useEffect(() => {
+        if (containerRef.current) {
+            gsap.fromTo(
+                containerRef.current,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+            );
+        }
+    }, []);
 
     const handleSave = async () => {
         if (!user) return;
@@ -47,7 +61,7 @@ export default function SettingsView() {
     if (!user) return <div className="p-8 text-center text-muted-foreground">Please login to view settings.</div>;
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500 max-w-2xl mx-auto pb-24 lg:pb-0">
+        <div ref={containerRef} className="space-y-6 max-w-2xl mx-auto pb-24 lg:pb-0">
             <h2 className="text-3xl font-bold font-rajdhani text-white mb-8">Profile Settings</h2>
 
             <div className="p-8 rounded-2xl bg-card border border-border shadow-xl relative overflow-hidden">
@@ -101,7 +115,7 @@ export default function SettingsView() {
                         disabled={isSaving}
                         className="w-full bg-primary text-black font-bold py-4 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 mt-8 shadow-lg shadow-primary/20"
                     >
-                        {isSaving ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+                        {isSaving ? <GsapLoaderInline size="md" /> : <Save size={20} />}
                         Save Changes
                     </button>
                 </div>

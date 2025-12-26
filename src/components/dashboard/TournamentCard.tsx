@@ -1,12 +1,19 @@
-import { useState } from "react";
-import { Trophy, Users, Coins, Loader2, Gamepad2 } from "lucide-react";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Trophy, Users, Coins, Gamepad2, AlertCircle, Wallet } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import { doc, runTransaction, increment, getDoc, setDoc, collection, Timestamp } from "firebase/firestore";
+import { doc, runTransaction, increment, collection, Timestamp, onSnapshot } from "firebase/firestore";
+import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import gsap from "gsap";
+import GsapLoader, { GsapLoaderInline } from "@/components/ui/GsapLoader";
+import GsapPing from "@/components/ui/GsapPing";
+import { GsapShimmer } from "@/components/ui/GsapPulse";
 
 interface TournamentCardProps {
     id: string;
@@ -32,6 +39,90 @@ export default function TournamentCard({
     const [isOpen, setIsOpen] = useState(false);
     const [ingameName, setIngameName] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [userBalance, setUserBalance] = useState<number | null>(null);
+    const [balanceLoading, setBalanceLoading] = useState(false);
+
+    const cardRef = useRef<HTMLDivElement>(null);
+    const shineRef = useRef<HTMLDivElement>(null);
+
+    // Parse entry fee once for use throughout
+    const feeString = String(entryFee);
+    const feeAmount = Number(feeString.replace(/[^0-9.-]+/g, ""));
+
+    // Check if user has sufficient balance
+    const hasInsufficientBalance = userBalance !== null && userBalance < feeAmount;
+    const amountNeeded = hasInsufficientBalance ? feeAmount - userBalance : 0;
+
+    // GSAP card hover animation
+    useEffect(() => {
+        const card = cardRef.current;
+        const shine = shineRef.current;
+        if (!card) return;
+
+        const handleMouseEnter = () => {
+            gsap.to(card, {
+                y: -4,
+                scale: 1.01,
+                duration: 0.3,
+                ease: "power2.out",
+            });
+            if (shine) {
+                gsap.fromTo(
+                    shine,
+                    { x: "-100%" },
+                    { x: "100%", duration: 0.6, ease: "power2.out" }
+                );
+            }
+        };
+
+        const handleMouseLeave = () => {
+            gsap.to(card, {
+                y: 0,
+                scale: 1,
+                duration: 0.3,
+                ease: "power2.out",
+            });
+        };
+
+        card.addEventListener("mouseenter", handleMouseEnter);
+        card.addEventListener("mouseleave", handleMouseLeave);
+
+        return () => {
+            card.removeEventListener("mouseenter", handleMouseEnter);
+            card.removeEventListener("mouseleave", handleMouseLeave);
+        };
+    }, []);
+
+    // Fetch user balance when dialog opens
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const user = auth.currentUser;
+        if (!user) {
+            setUserBalance(null);
+            return;
+        }
+
+        setBalanceLoading(true);
+        const userRef = doc(db, "users", user.uid);
+
+        // Real-time listener for wallet balance
+        const unsubscribe = onSnapshot(userRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                setUserBalance(typeof data.walletBalance === 'number' ? data.walletBalance : 0);
+            } else {
+                setUserBalance(0);
+            }
+            setBalanceLoading(false);
+        }, (error) => {
+            console.error("Error fetching balance:", error);
+            setUserBalance(0);
+            setBalanceLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [isOpen]);
 
     const handleJoin = async () => {
         const user = auth.currentUser;
@@ -45,9 +136,13 @@ export default function TournamentCard({
             return;
         }
 
+        // Pre-check: Don't even start if balance is clearly insufficient
+        if (hasInsufficientBalance) {
+            alert(`Insufficient balance! You need ₹${feeAmount} but only have ₹${userBalance}. Please top up your wallet first.`);
+            return;
+        }
+
         setIsLoading(true);
-        const feeString = String(entryFee);
-        const feeAmount = Number(feeString.replace(/[^0-9.-]+/g, ""));
 
         try {
             await runTransaction(db, async (transaction) => {
@@ -73,8 +168,17 @@ export default function TournamentCard({
                 }
 
                 const userData = userDoc.data();
-                if (userData.walletBalance < feeAmount) {
-                    throw `Insufficient balance! You need ₹${feeAmount}. Current: ₹${userData.walletBalance}`;
+                const currentBalance = typeof userData.walletBalance === 'number' ? userData.walletBalance : 0;
+
+                // Strict validation: prevent registration if balance is insufficient
+                if (currentBalance < feeAmount) {
+                    throw `Insufficient balance! You need ₹${feeAmount} but only have ₹${currentBalance}. Please top up your wallet first.`;
+                }
+
+                // Double-check: ensure the resulting balance won't go negative
+                const newBalance = currentBalance - feeAmount;
+                if (newBalance < 0) {
+                    throw `Cannot complete registration. This would result in negative balance. Please add ₹${feeAmount - currentBalance} to your wallet.`;
                 }
 
                 // --- WRITE PHASE ---
@@ -123,17 +227,22 @@ export default function TournamentCard({
     const participantPercentage = (currentSlots / maxSlots) * 100;
 
     return (
-        <div className="group relative card-premium tournament-card p-6 cursor-pointer">
+        <div
+            ref={cardRef}
+            className="group relative card-premium tournament-card p-6 cursor-pointer"
+            style={{ willChange: "transform" }}
+        >
             {/* Shine effect on hover */}
-            <div className="card-shine" />
+            <div
+                ref={shineRef}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"
+                style={{ transform: "translateX(-100%)" }}
+            />
 
-            {/* Status indicator with pulse animation */}
+            {/* Status indicator with GSAP ping animation */}
             {isLive && (
                 <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                    <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
-                    </span>
+                    <GsapPing color="bg-red-400" size="md" />
                     <span className="text-xs font-bold text-red-400 uppercase tracking-wide">Live</span>
                 </div>
             )}
@@ -179,8 +288,8 @@ export default function TournamentCard({
                         className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/80 to-primary rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${participantPercentage}%` }}
                     >
-                        {/* Shimmer effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                        {/* GSAP Shimmer effect */}
+                        <GsapShimmer />
                     </div>
                 </div>
             </div>
@@ -215,16 +324,52 @@ export default function TournamentCard({
                                     disabled={isLoading}
                                 />
                             </div>
-                            <div className="p-4 bg-muted/20 rounded-lg border border-border/50 space-y-2">
+                            <div className="p-4 bg-muted/20 rounded-lg border border-border/50 space-y-3">
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-muted-foreground">Entry Fee:</span>
-                                    <span className="font-bold text-foreground">₹{entryFee}</span>
+                                    <span className="font-bold text-foreground">₹{feeAmount}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-muted-foreground">Prize Pool:</span>
                                     <span className="font-bold text-yellow-400">₹{prizePool}</span>
                                 </div>
+                                <div className="flex justify-between items-center border-t border-border/30 pt-3">
+                                    <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                                        <Wallet className="w-4 h-4" />
+                                        Your Balance:
+                                    </span>
+                                    {balanceLoading ? (
+                                        <GsapLoaderInline size="sm" className="text-muted-foreground" />
+                                    ) : (
+                                        <span className={`font-bold ${hasInsufficientBalance ? 'text-red-400' : 'text-green-400'}`}>
+                                            ₹{userBalance ?? 0}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
+
+                            {/* Insufficient Balance Warning */}
+                            {hasInsufficientBalance && !balanceLoading && (
+                                <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/30 flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                    <div className="space-y-2">
+                                        <p className="text-sm text-red-400 font-medium">
+                                            Insufficient Balance!
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            You need ₹{amountNeeded.toFixed(2)} more to join this tournament.
+                                        </p>
+                                        <Link
+                                            href="/wallet"
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            <Wallet className="w-3.5 h-3.5" />
+                                            Top Up Wallet
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <DialogFooter className="gap-3">
                             <Button
@@ -237,11 +382,11 @@ export default function TournamentCard({
                             </Button>
                             <Button
                                 onClick={handleJoin}
-                                disabled={isLoading}
+                                disabled={isLoading || hasInsufficientBalance || balanceLoading}
                                 className="btn-premium"
                             >
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isLoading ? "Joining..." : "Confirm Join"}
+                                {isLoading && <GsapLoaderInline size="sm" className="mr-2" />}
+                                {isLoading ? "Joining..." : hasInsufficientBalance ? "Insufficient Balance" : "Confirm Join"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, ShieldCheck } from "lucide-react";
+import gsap from "gsap";
 
 import { db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
+import GsapLoader from "@/components/ui/GsapLoader";
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -16,6 +18,29 @@ export default function PaymentModal({ isOpen, onClose, uid }: PaymentModalProps
     const [amount, setAmount] = useState("100");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    // GSAP entrance animation
+    useEffect(() => {
+        if (isOpen) {
+            if (overlayRef.current) {
+                gsap.fromTo(
+                    overlayRef.current,
+                    { opacity: 0 },
+                    { opacity: 1, duration: 0.2, ease: "power2.out" }
+                );
+            }
+            if (contentRef.current) {
+                gsap.fromTo(
+                    contentRef.current,
+                    { opacity: 0, scale: 0.95, y: -10 },
+                    { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "back.out(1.5)" }
+                );
+            }
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -77,8 +102,14 @@ export default function PaymentModal({ isOpen, onClose, uid }: PaymentModalProps
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 relative shadow-2xl shadow-primary/10">
+        <div
+            ref={overlayRef}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        >
+            <div
+                ref={contentRef}
+                className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 relative shadow-2xl shadow-primary/10"
+            >
                 <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-white transition-colors">
                     <X size={20} />
                 </button>
@@ -116,7 +147,7 @@ export default function PaymentModal({ isOpen, onClose, uid }: PaymentModalProps
                         disabled={loading}
                         className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-white py-3 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 mt-4"
                     >
-                        {loading ? <div className="h-4 w-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : <ShieldCheck size={18} />}
+                        {loading ? <GsapLoader size="sm" className="border-white/50 border-t-white" /> : <ShieldCheck size={18} />}
                         {loading ? "Processing..." : `Pay ₹${amount}`}
                     </button>
 

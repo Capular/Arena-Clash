@@ -98,6 +98,7 @@
   }
 
   /* Premium Card Design System */
+  /* Note: Hover animations are now handled by GSAP */
   .card-premium {
     background: linear-gradient(145deg,
         hsl(240 10% 5%) 0%,
@@ -111,7 +112,7 @@
       inset 0 1px 0 0 rgb(255 255 255 / 0.05);
     position: relative;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
   }
 
   /* Top highlight line */
@@ -126,33 +127,6 @@
         transparent 0%,
         hsl(0 0% 100% / 0.1) 50%,
         transparent 100%);
-  }
-
-  /* Hover state for cards */
-  .card-premium:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow:
-      0 2px 4px 0 rgb(0 0 0 / 0.05),
-      0 8px 24px 0 rgb(0 0 0 / 0.2),
-      0 16px 48px 0 rgb(0 0 0 / 0.15),
-      inset 0 1px 0 0 rgb(255 255 255 / 0.08);
-    border-color: hsl(240 3.7% 20%);
-  }
-
-  /* Shine effect for cards */
-  .card-shine {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.1) 50%,
-        transparent 100%);
-    transform: translateX(-100%);
-    transition: transform 0.6s ease;
-  }
-
-  .card-premium:hover .card-shine {
-    transform: translateX(100%);
   }
 
   /* Glassmorphism Effects */
@@ -174,6 +148,7 @@
   }
 
   /* Premium Button Styles */
+  /* Note: Hover animations are now handled by GSAP */
   .btn-premium {
     position: relative;
     padding: 0.75rem 1.5rem;
@@ -185,58 +160,13 @@
         hsl(0 0% 100% / 0.08) 100%);
     color: hsl(0 0% 98%);
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    will-change: transform;
   }
 
-  .btn-premium::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent);
-    transition: left 0.5s ease;
-  }
-
-  .btn-premium:hover {
-    transform: translateY(-2px) scale(1.02);
-    border-color: hsl(0 0% 100% / 0.4);
-    box-shadow:
-      0 6px 20px rgba(0, 0, 0, 0.4),
-      0 0 30px rgba(255, 255, 255, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  }
-
-  .btn-premium:hover::before {
-    left: 100%;
-  }
-
-  .btn-premium:active {
-    transform: translateY(0) scale(0.98);
-  }
-
-  /* Gradient Border Animation */
-  @keyframes rotate-gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-
-    50% {
-      background-position: 100% 50%;
-    }
-
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
+  /* Gradient Border - static styles only, animation handled by GSAP */
   .gradient-border {
     position: relative;
     background: hsl(240 10% 3.9%);
@@ -256,44 +186,11 @@
         hsl(0 0% 100% / 0.05),
         hsl(0 0% 100% / 0.2));
     background-size: 200% 200%;
-    animation: rotate-gradient 3s ease infinite;
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-  }
-
-  /* Shimmer Animation */
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-  }
-
-  /* Pulse Animation for Live Indicators */
-  @keyframes pulse-glow {
-
-    0%,
-    100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.5;
-    }
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   /* Scrollbar Styling */
@@ -320,7 +217,6 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: hsl(240 5% 34%);
     border-radius: 4px;
-    transition: background 0.2s ease;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {

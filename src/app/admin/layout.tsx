@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { GsapLoaderInline } from "@/components/ui/GsapLoader";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { user, isAdmin, loading } = useAuth();
@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (loading || !user || !isAdmin) {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
-                <Loader2 className="animate-spin text-primary mr-2" />
+                <GsapLoaderInline className="text-primary mr-2" />
                 <span className="font-rajdhani font-medium text-foreground">Verifying access...</span>
             </div>
         );

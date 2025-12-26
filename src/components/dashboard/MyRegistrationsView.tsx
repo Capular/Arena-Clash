@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { collectionGroup, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { useEffect, useState, useRef } from "react";
+import { collectionGroup, query, where, getDocs, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Loader2, Calendar, Trophy, Gamepad2 } from "lucide-react";
+import { Calendar, Trophy, Gamepad2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import gsap from "gsap";
+import GsapLoader from "@/components/ui/GsapLoader";
+import GsapPulse from "@/components/ui/GsapPulse";
 
 interface Registration {
     tournamentId: string;
@@ -22,6 +25,7 @@ export default function MyRegistrationsView() {
     const { user } = useAuth();
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [loading, setLoading] = useState(true);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchRegistrations = async () => {
@@ -73,10 +77,21 @@ export default function MyRegistrationsView() {
         fetchRegistrations();
     }, [user]);
 
+    // GSAP entrance animation
+    useEffect(() => {
+        if (!loading && containerRef.current) {
+            gsap.fromTo(
+                containerRef.current,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+            );
+        }
+    }, [loading]);
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <GsapLoader size="lg" className="text-primary h-8 w-8" />
             </div>
         );
     }
@@ -91,7 +106,7 @@ export default function MyRegistrationsView() {
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5">
+        <div ref={containerRef} className="space-y-6">
             <h2 className="text-3xl font-bold text-white font-rajdhani flex items-center gap-3">
                 <Calendar className="text-primary" />
                 My Registrations
@@ -102,9 +117,17 @@ export default function MyRegistrationsView() {
                     <Card key={reg.tournamentId} className="bg-card/50 border-border hover:border-primary/50 transition-all group overflow-hidden">
                         <div className="h-24 bg-gradient-to-br from-neutral-900 to-black relative">
                             <div className="absolute inset-0 bg-primary/10 mix-blend-overlay" />
-                            <Badge className={`absolute top-3 right-3 ${reg.status === 'Live' ? 'bg-red-500 animate-pulse' : 'bg-primary'}`}>
-                                {reg.status}
-                            </Badge>
+                            {reg.status === 'Live' ? (
+                                <GsapPulse className="absolute top-3 right-3">
+                                    <Badge className="bg-red-500">
+                                        {reg.status}
+                                    </Badge>
+                                </GsapPulse>
+                            ) : (
+                                <Badge className="absolute top-3 right-3 bg-primary">
+                                    {reg.status}
+                                </Badge>
+                            )}
                             <div className="absolute bottom-3 left-4 flex items-center gap-2">
                                 <Gamepad2 className="w-4 h-4 text-white/70" />
                                 <span className="text-xs font-bold text-white/70 uppercase tracking-wider">{reg.game}</span>

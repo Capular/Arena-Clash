@@ -38,14 +38,30 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
-            // Create/Update user in Firestore
-            await setDoc(doc(db, "users", user.uid), {
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                role: 'user', // Default role
-                lastLogin: new Date().toISOString()
-            }, { merge: true });
+            // Check if user exists
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                // New User: Create full profile with default role
+                await setDoc(userRef, {
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    role: 'user',
+                    walletBalance: 0,
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString()
+                });
+            } else {
+                // Existing User: Update only metadata, prevent role overwrite
+                await setDoc(userRef, {
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    lastLogin: new Date().toISOString()
+                }, { merge: true });
+            }
 
             onClose();
         } catch (err: any) {
